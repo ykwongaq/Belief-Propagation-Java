@@ -2,7 +2,7 @@ package wyk.bp.graph;
 
 import wyk.bp.probtable.ProbabilityTable;
 
-public class Factor implements BPGraphNode {
+public class Factor implements FactorGraphNode {
 
     protected final ProbabilityTable table;
 
