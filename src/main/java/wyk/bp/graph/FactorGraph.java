@@ -24,8 +24,8 @@ public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
         return super.addEdge(sourceVertex, targetVertex, e);
     }
 
-    public boolean addEntity(final Entity<?> entity) {
-        return super.addVertex(entity);
+    public boolean addVariable(final Variable<?> variable) {
+        return super.addVertex(variable);
     }
 
     public boolean addFactor(final Factor factor) {
@@ -33,6 +33,6 @@ public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
     }
 
     protected boolean isValidEdge(final FactorGraphNode sourceVertex, FactorGraphNode targetVertex) {
-        return (sourceVertex instanceof Factor && targetVertex instanceof Entity<?>) || (sourceVertex instanceof Entity<?> && targetVertex instanceof Factor);
+        return (sourceVertex instanceof Factor && targetVertex instanceof Variable<?>) || (sourceVertex instanceof Variable<?> && targetVertex instanceof Factor);
     }
 }

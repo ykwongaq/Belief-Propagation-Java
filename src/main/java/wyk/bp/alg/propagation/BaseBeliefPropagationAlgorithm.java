@@ -5,7 +5,7 @@ import org.jgrapht.alg.util.Pair;
 import wyk.bp.alg.interfaces.BeliefPropagationAlgorithm;
 import wyk.bp.graph.Factor;
 import wyk.bp.graph.FactorGraphNode;
-import wyk.bp.graph.Entity;
+import wyk.bp.graph.Variable;
 import wyk.bp.probtable.ProbabilityTable;
 
 import java.util.HashMap;
@@ -20,22 +20,22 @@ abstract public class BaseBeliefPropagationAlgorithm<E> implements BeliefPropaga
         this.graph = graph;
         this.messageTable = new HashMap<>();
     }
-    abstract public ProbabilityTable getBelief(final Entity<?> entity);
+    abstract public ProbabilityTable getBelief(final Variable<?> variable);
     protected ProbabilityTable getMessage(final FactorGraphNode fromNode, final FactorGraphNode toNode) {
         return null;
     }
-    protected ProbabilityTable getFactorToEntityMessage(final Factor factor, final Entity<?> entity) {
-        Pair<FactorGraphNode, FactorGraphNode> key = Pair.of(factor, entity);
-        return this.messageTable.getOrDefault(key, this.calFactorToEntityMessage(factor, entity));
+    protected ProbabilityTable getFactorToVariableMessage(final Factor factor, final Variable<?> variable) {
+        Pair<FactorGraphNode, FactorGraphNode> key = Pair.of(factor, variable);
+        return this.messageTable.getOrDefault(key, this.calFactorToVariableMessage(factor, variable));
     }
-    protected ProbabilityTable getEntityToFactorMessage(final Entity<?> entity, final Factor factor) {
-        Pair<FactorGraphNode, FactorGraphNode> key = Pair.of(entity, factor);
-        return this.messageTable.getOrDefault(key, this.calEntityToFactorMessage(entity, factor));
+    protected ProbabilityTable getVariableToFactorMessage(final Variable<?> variable, final Factor factor) {
+        Pair<FactorGraphNode, FactorGraphNode> key = Pair.of(variable, factor);
+        return this.messageTable.getOrDefault(key, this.calVariableToFactorMessage(variable, factor));
     }
-    protected ProbabilityTable calFactorToEntityMessage(final Factor factor, final Entity<?> entity) {
+    protected ProbabilityTable calFactorToVariableMessage(final Factor factor, final Variable<?> variable) {
         return null;
     }
-    protected ProbabilityTable calEntityToFactorMessage(final Entity<?> entity, final Factor factor) {
+    protected ProbabilityTable calVariableToFactorMessage(final Variable<?> variable, final Factor factor) {
         return null;
     }
 }
