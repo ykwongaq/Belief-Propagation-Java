@@ -66,7 +66,7 @@ class FactorTest {
         });
         Factor factor = new Factor(variables1, matrix1);
         assertIterableEquals(FactorTest.variables1, factor.getVariables());
-        assertEquals(FactorTest.matrix1, factor.getMatrix());
+        assertEquals(FactorTest.matrix1, factor.getDistribution());
     }
 
     @Test
@@ -80,7 +80,7 @@ class FactorTest {
         int[] targetDims = {2, 0, 1};
         Factor factor = new Factor(FactorTest.variables1, FactorTest.matrix1);
         factor.moveAxis(originDims, targetDims);
-        assertEquals(expected, factor.getMatrix());
+        assertEquals(expected, factor.getDistribution());
     }
 
     @Test
