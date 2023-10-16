@@ -2,8 +2,11 @@ package wyk.bp.graph;
 
 import org.jgrapht.graph.Pseudograph;
 
+import java.io.Serial;
+
 public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
     private static final String SAME_TYPE_CONNECTION_ERROR_MSG = "Cannot connect two vertex with same type 1. Vertex and Vertex or 2. Factor and Factor";
+    @Serial
     private static final long serialVersionUID = -7574564204896552580L;
     public FactorGraph(Class<? extends E> edgeClass) {
         super(edgeClass);
