@@ -64,6 +64,20 @@ class FactorTest {
         Factor factor = new Factor(matrix1, variables1);
         assertIterableEquals(FactorTest.variables1, factor.getVariables());
         assertEquals(FactorTest.matrix1, factor.getDistribution());
+
+        List<Variable<?>> vars1 = new ArrayList<>();
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Factor(matrix1, vars1);
+        });
+
+        List<Variable<?>> vars2 = new ArrayList<>();
+        Variable<String> var1 = new Variable<>("a");
+        vars2.add(var1);
+        vars2.add(null);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Factor(matrix1, vars2);
+        });
     }
 
     @Test

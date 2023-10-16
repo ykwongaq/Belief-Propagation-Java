@@ -4,6 +4,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import wyk.bp.utils.DistributionUtil;
 import wyk.bp.utils.Log;
 
+import java.nio.channels.FileLockInterruptionException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,15 +19,26 @@ public class Factor implements FactorGraphNode {
         this(distribution, Arrays.asList(variables));
     }
 
-    public Factor(final INDArray matrix, final List<Variable<?>> variables) {
-        Objects.requireNonNull(variables, "Given variables list cannot be null");
-        Objects.requireNonNull(matrix, "Given matrix cannot be null");
+    public Factor(final INDArray distribution, final List<Variable<?>> variables) {
+        Objects.requireNonNull(variables, Log.genLogMsg(this.getClass(), "Given variables list cannot be null"));
+        Objects.requireNonNull(distribution, Log.genLogMsg(this.getClass(), "Given distribution cannot be null"));
+
+        // Given list cannot be empty
+        if (variables.isEmpty()) {
+            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Given variables list is empty"));
+        }
+
+        // Given list cannot contains null element
+        if (variables.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Give variables list contain null element"));
+        }
+
         this.variables = variables;
-        this.distribution = matrix;
+        this.distribution = distribution;
     }
     public void moveAxis(int[] originDims, int[] targetDims) {
         if (originDims.length != targetDims.length) {
-            throw new IllegalArgumentException("Origin and target dimension array should have same size");
+            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Origin and target dimension array should have same size"));
         }
         final int numDims = this.distribution.shape().length;
         if (Arrays.stream(originDims).anyMatch(originDim -> originDim < 0 || originDim > numDims)) {
@@ -108,5 +120,9 @@ public class Factor implements FactorGraphNode {
     protected static int[] findIndices(final List<Variable<?>> variables, final List<Variable<?>> targetVariables) {
         List<Variable<?>> filteredVariables = variables.stream().filter(targetVariables::contains).toList();
         return targetVariables.stream().mapToInt(filteredVariables::indexOf).toArray();
+    }
+
+    protected static Factor factorMarginalization(final Factor factor, List<Variable<?>> targetVariables) {
+        return null;
     }
 }
