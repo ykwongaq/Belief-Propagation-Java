@@ -381,5 +381,22 @@ class FactorTest {
         assertThrows(IllegalArgumentException.class, () -> Factor.joinFactors(factors));
     }
 
+    @Test
+    void testNormalize() {
+        Variable<String> a = new Variable<>("a");
+        Variable<String> b = new Variable<>("b");
+
+        double[][] values = {
+                {0.5, 0.8}, {0.1, 0.0}
+        };
+        Factor factor = new Factor(Nd4j.create(values), a, b);
+        factor.normalize();
+        double[][] expectedValues = {
+                {0.5 / 1.4, 0.8 / 1.4}, {0.1 / 1.4, 0.0}
+        };
+        Factor expected = new Factor(Nd4j.create(expectedValues), a, b);
+
+        assertEquals(expected, factor);
+    }
 
 }

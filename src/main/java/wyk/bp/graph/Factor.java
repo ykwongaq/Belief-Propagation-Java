@@ -69,6 +69,10 @@ public class Factor implements FactorGraphNode {
         return this.variables.contains(variable);
     }
 
+    public void normalize() {
+        this.distribution.divi(this.distribution.sumNumber());
+    }
+
     @Override
     public int hashCode() {
         int result = this.distribution.hashCode();
