@@ -1,14 +1,11 @@
 package wyk.bp.graph;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.shade.errorprone.annotations.Var;
 import wyk.bp.utils.DistributionUtil;
 import wyk.bp.utils.Log;
 
-import java.nio.channels.FileLockInterruptionException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class Factor implements FactorGraphNode {
@@ -31,6 +28,10 @@ public class Factor implements FactorGraphNode {
         // Given list cannot contains null element
         if (variables.stream().anyMatch(Objects::isNull)) {
             throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Give variables list contain null element"));
+        }
+
+        if (variables.size() != distribution.rank()) {
+            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Given variables list size does not match with number of dimension of distribution: Number of variables: " + variables.size() + " Number of dimension: " + distribution.rank()));
         }
 
         this.variables = variables;
@@ -102,12 +103,12 @@ public class Factor implements FactorGraphNode {
 
         // Adjust dimensions
         final int[] originDims1 = IntStream.range(0, factor1.getVariables().size()).toArray();
-        final int[] targetDims1 = Factor.findIndices(newVariables, factor1.getVariables());
+        final int[] targetDims1 = Factor.findIndices(newVariables.stream().filter(factor1.getVariables()::contains).toList(), factor1.getVariables());
         INDArray distribution1 = DistributionUtil.moveaxis(factor1.getDistribution(), originDims1, targetDims1);
         distribution1 = DistributionUtil.appendDimensions(distribution1, commonVariables.size(), false);
 
         final int[] originDims2 = IntStream.range(0, factor2.getVariables().size()).toArray();
-        final int[] targetDims2 = Factor.findIndices(newVariables, factor2.getVariables());
+        final int[] targetDims2 = Factor.findIndices(newVariables.stream().filter(factor2.getVariables()::contains).toList(), factor2.getVariables());
         INDArray distribution2 = DistributionUtil.moveaxis(factor2.getDistribution(), originDims2, targetDims2);
         distribution2 = DistributionUtil.appendDimensions(distribution2, commonVariables.size(), true);
 
@@ -118,11 +119,35 @@ public class Factor implements FactorGraphNode {
     }
 
     protected static int[] findIndices(final List<Variable<?>> variables, final List<Variable<?>> targetVariables) {
-        List<Variable<?>> filteredVariables = variables.stream().filter(targetVariables::contains).toList();
-        return targetVariables.stream().mapToInt(filteredVariables::indexOf).toArray();
+        return targetVariables.stream().mapToInt(variables::indexOf).toArray();
     }
 
-    protected static Factor factorMarginalization(final Factor factor, List<Variable<?>> targetVariables) {
-        return null;
+    public static Factor factorMarginalization(final Factor factor, final Variable<?>... targetVariables) {
+        return Factor.factorMarginalization(factor, Arrays.asList(targetVariables));
+    }
+
+    public static Factor factorMarginalization(final Factor factor, final List<Variable<?>> targetVariables) {
+        Objects.requireNonNull(factor, Log.genLogMsg("Factor", "Given factor cannot be null"));
+        Objects.requireNonNull(targetVariables, Log.genLogMsg("Factor", "Given targetVariables cannot be null"));
+
+        // targetVariables cannot be empty
+        if (targetVariables.isEmpty()) {
+            throw new IllegalArgumentException(Log.genLogMsg("Factor", "Given targetVariables cannot be empty"));
+        }
+
+        // targetVariables cannot contain null element
+        if (targetVariables.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException(Log.genLogMsg("Factor", "Given targetVariables cannot contain null element"));
+        }
+
+        // targetVariables should be the subset of factor variables
+        if (!new HashSet<>(factor.getVariables()).containsAll(targetVariables)) {
+            throw new IllegalArgumentException(Log.genLogMsg("Factor", "Given targetVariables should be the subset of factor variables"));
+        }
+
+        int[] sumDimensions = Factor.findIndices(factor.getVariables(), targetVariables);
+        INDArray newDistribution = factor.getDistribution().sum(sumDimensions);
+        List<Variable<?>> newVariables = factor.getVariables().stream().filter(var -> !targetVariables.contains(var)).toList();
+        return new Factor(newDistribution, newVariables);
     }
 }

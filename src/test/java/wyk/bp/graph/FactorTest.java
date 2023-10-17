@@ -1,9 +1,11 @@
 package wyk.bp.graph;
 
+import org.apache.commons.math3.transform.FastCosineTransformer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.shade.errorprone.annotations.Var;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,26 +60,23 @@ class FactorTest {
 
     @Test()
     void testConstructor() {
-        assertThrows(NullPointerException.class, () -> {
-            new Factor(null, variables1);
-        });
+        assertThrows(NullPointerException.class, () -> new Factor(null, variables1));
+
         Factor factor = new Factor(matrix1, variables1);
         assertIterableEquals(FactorTest.variables1, factor.getVariables());
         assertEquals(FactorTest.matrix1, factor.getDistribution());
 
         List<Variable<?>> vars1 = new ArrayList<>();
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Factor(matrix1, vars1);
-        });
+        assertThrows(IllegalArgumentException.class, () -> new Factor(matrix1, vars1));
 
         List<Variable<?>> vars2 = new ArrayList<>();
         Variable<String> var1 = new Variable<>("a");
         vars2.add(var1);
         vars2.add(null);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Factor(matrix1, vars2);
-        });
+        assertThrows(IllegalArgumentException.class, () -> new Factor(matrix1, vars2));
+
+        assertThrows(IllegalArgumentException.class, () -> new Factor(matrix1, variables2));
     }
 
     @Test
@@ -191,8 +190,62 @@ class FactorTest {
         Variable<String> var2 = new Variable<>("b");
         Factor factor1 = new Factor(FactorTest.matrix1, var1);
         Factor factor2 = new Factor(FactorTest.matrix2, var2);
+        assertThrows(IllegalArgumentException.class, () -> Factor.factorProduct(factor1, factor2));
+    }
+
+    @Test
+    void testMarginalization1() {
+        double[][][] values = {
+                {{0.25, 0.35}, {0.08, 0.16}},
+                {{0.05, 0.07}, {0.0, 0.0}},
+                {{0.15, 0.21}, {0.09, 0.18}}
+        };
+        Variable<String> var1 = new Variable<>("a");
+        Variable<String> var2 = new Variable<>("b");
+        Variable<String> var3 = new Variable<>("c");
+        Factor factor = new Factor(Nd4j.create(values), var1, var2, var3);
+
+        double[][] expectedValues = {
+                {0.33, 0.51}, {0.05, 0.07}, {0.24, 0.39}
+        };
+        Factor expectedFactor = new Factor(Nd4j.create(expectedValues), var1, var3);
+
+        Factor marginalizedFactor = Factor.factorMarginalization(factor, var2);
+        assertEquals(expectedFactor, marginalizedFactor);
+    }
+
+    @Test
+    void testMarginalization2() {
+        double[][][] values = {
+                {{0.25, 0.35}, {0.08, 0.16}},
+                {{0.05, 0.07}, {0.0, 0.0}},
+                {{0.15, 0.21}, {0.09, 0.18}}
+        };
+        Variable<String> var1 = new Variable<>("a");
+        Variable<String> var2 = new Variable<>("b");
+        Variable<String> var3 = new Variable<>("c");
+        Factor factor = new Factor(Nd4j.create(values), var1, var2, var3);
+
+        double[] expectedValues = {
+                0.84, 0.12, 0.63
+        };
+        Factor expectedFactor = new Factor(Nd4j.create(expectedValues), var1);
+
+        Factor marginalizedFactor = Factor.factorMarginalization(factor, var2, var3);
+        assertEquals(expectedFactor, marginalizedFactor);
+    }
+
+    @Test
+    void testMarginalization3() {
         assertThrows(IllegalArgumentException.class, () -> {
-            Factor.factorProduct(factor1, factor2);
+            double[][] values1 = {
+                    {0.5, 0.8}, {0.1, 0.0}
+            };
+            Variable<String> var1 = new Variable<>("a");
+            Variable<String> var2 = new Variable<>("b");
+            Variable<String> var3 = new Variable<>("c");
+            Factor factor1 = new Factor(Nd4j.create(values1), var2, var1);
+            Factor.factorMarginalization(factor1, var3);
         });
     }
 
