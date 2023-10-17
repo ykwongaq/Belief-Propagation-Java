@@ -1,31 +1,34 @@
 package wyk.bp.graph;
 
-import org.apache.commons.math3.transform.FastCosineTransformer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.shade.errorprone.annotations.Var;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class FactorTest {
 
-    protected static INDArray matrix1;
+    protected static INDArray distribution1;
     protected static List<Variable<?>> variables1;
-    protected static INDArray matrix2;
+    protected static INDArray distribution2;
     protected static List<Variable<?>> variables2;
+
+    protected static INDArray distribution3;
+
     @BeforeAll
     static void initTestCase() {
-        FactorTest.matrix1 = FactorTest.initMatrix1();
+        FactorTest.distribution1 = FactorTest.initDistribution1();
         FactorTest.variables1 = FactorTest.initVariables1();
-        FactorTest.matrix2 = FactorTest.initMatrix2();
+        FactorTest.distribution2 = FactorTest.initDistribution2();
         FactorTest.variables2 = FactorTest.initVariables2();
+        FactorTest.distribution3 = FactorTest.initDistribution3();
     }
-    static INDArray initMatrix1() {
+    static INDArray initDistribution1() {
         double[][][] values = {
                 {{0.2, 0.5}, {0.6, 0.5}}, {{1.0, 0.6}, {0.2, 0.3}}
         };
@@ -42,7 +45,7 @@ class FactorTest {
         return variables1;
     }
 
-    static INDArray initMatrix2() {
+    static INDArray initDistribution2() {
         double[][] values = {
                 {0.5, 0.7}, {0.1, 0.2}
         };
@@ -58,25 +61,40 @@ class FactorTest {
         return variables1;
     }
 
-    @Test()
-    void testConstructor() {
-        assertThrows(NullPointerException.class, () -> new Factor(null, variables1));
+    static INDArray initDistribution3() {
+        double[][][] values = {
+                {{0.2, 0.5}, {0.6, 0.4}}, {{1.0, 0.6}, {0.2, 0.3}}
+        };
+        return Nd4j.create(values);
+    }
+    @Test
+    void testConstructorWithNullArgument() {
+        assertThrows(NullPointerException.class, () -> new Factor(null, FactorTest.variables1));
+        assertThrows(NullPointerException.class, () -> new Factor(FactorTest.distribution1, (List<Variable<?>>) null));
+    }
 
-        Factor factor = new Factor(matrix1, variables1);
-        assertIterableEquals(FactorTest.variables1, factor.getVariables());
-        assertEquals(FactorTest.matrix1, factor.getDistribution());
+    @Test
+    void testConstructorWithEmptyVariables() {
+        assertThrows(IllegalArgumentException.class, () -> new Factor(FactorTest.distribution1, new ArrayList<Variable<?>>()));
+    }
 
-        List<Variable<?>> vars1 = new ArrayList<>();
-        assertThrows(IllegalArgumentException.class, () -> new Factor(matrix1, vars1));
+    @Test
+    void testConstructorWithNullElement() {
+        List<Variable<?>> variables = new ArrayList<>();
+        Variable<String> a = new Variable<>("a");
+        Variable<String> b = new Variable<>("b");
+        variables.add(a);
+        variables.add(null);
+        variables.add(b);
 
-        List<Variable<?>> vars2 = new ArrayList<>();
-        Variable<String> var1 = new Variable<>("a");
-        vars2.add(var1);
-        vars2.add(null);
+        assertThrows(IllegalArgumentException.class, () -> new Factor(FactorTest.distribution1, variables));
+    }
 
-        assertThrows(IllegalArgumentException.class, () -> new Factor(matrix1, vars2));
-
-        assertThrows(IllegalArgumentException.class, () -> new Factor(matrix1, variables2));
+    @Test
+    void testConstructorWithMismatchRank() {
+        Variable<String> a = new Variable<>("a");
+        Variable<String> b = new Variable<>("b");
+        assertThrows(IllegalArgumentException.class, () -> new Factor(FactorTest.distribution1, a, b));
     }
 
     @Test
@@ -88,14 +106,14 @@ class FactorTest {
 
         int[] originDims = {0, 1, 2};
         int[] targetDims = {2, 0, 1};
-        Factor factor = new Factor(FactorTest.matrix1, FactorTest.variables1);
+        Factor factor = new Factor(FactorTest.distribution1, FactorTest.variables1);
         factor.moveAxis(originDims, targetDims);
         assertEquals(expected, factor.getDistribution());
     }
 
     @Test
     void testMoveAxis_withInvalidInput() {
-        Factor factor = new Factor(FactorTest.matrix1, FactorTest.variables1);
+        Factor factor = new Factor(FactorTest.distribution1, FactorTest.variables1);
         int[] originDims1 = {0, 1, 2};
         int[] targetDims1 = {2, 0};
         assertThrows(IllegalArgumentException.class, () -> factor.moveAxis(originDims1, targetDims1));
@@ -111,17 +129,24 @@ class FactorTest {
 
     @Test
     void testEquals() {
-        Factor factor1 = new Factor(FactorTest.matrix1, FactorTest.variables1);
-        Factor factor2 = new Factor(FactorTest.matrix2, FactorTest.variables1);
-        Factor factor3 = new Factor(FactorTest.matrix1, FactorTest.variables2);
-        Factor factor4 = new Factor(FactorTest.matrix2, FactorTest.variables2);
-        Factor factor5 = new Factor(FactorTest.matrix1, FactorTest.variables1);
+        Factor factor1 = new Factor(FactorTest.distribution1, FactorTest.variables1);
+        Factor factor2 = new Factor(FactorTest.distribution2, FactorTest.variables2);
+        Factor factor3 = new Factor(FactorTest.distribution3, FactorTest.variables1);
+        Factor factor4 = new Factor(FactorTest.distribution1, FactorTest.variables1);
 
-        assertEquals(factor1, factor5);
-        assertTrue(factor1.haveSameVariable(factor2));
-        assertFalse(factor1.haveSameVariable(factor3));
+        assertEquals(factor1, factor4);
+        assertNotEquals(factor1, factor2);
         assertNotEquals(factor1, factor3);
-        assertNotEquals(factor1, factor4);
+    }
+
+    @Test
+    void testSameVariables() {
+        Factor factor1 = new Factor(FactorTest.distribution1, FactorTest.variables1);
+        Factor factor2 = new Factor(FactorTest.distribution2, FactorTest.variables2);
+        Factor factor3 = new Factor(FactorTest.distribution3, FactorTest.variables1);
+
+        assertTrue(factor1.haveSameVariable(factor3));
+        assertFalse(factor1.haveSameVariable(factor2));
     }
 
     @Test
@@ -175,21 +200,26 @@ class FactorTest {
     }
 
     @Test
-    void testProduct3() {
+    void testProductWithNullArgument() {
         assertThrows(NullPointerException.class, () -> {
-            Factor factor = new Factor(FactorTest.matrix1, FactorTest.variables1);
+            Factor factor = new Factor(FactorTest.distribution1, FactorTest.variables1);
             Factor.factorProduct(factor, null);
         });
-
         assertThrows(NullPointerException.class, () -> {
-            Factor factor = new Factor(FactorTest.matrix1, FactorTest.variables1);
+            Factor factor = new Factor(FactorTest.distribution1, FactorTest.variables1);
             Factor.factorProduct(null, factor);
         });
+    }
 
+    @Test
+    void testProductWithMismatchVariables() {
         Variable<String> var1 = new Variable<>("a");
         Variable<String> var2 = new Variable<>("b");
-        Factor factor1 = new Factor(FactorTest.matrix1, var1);
-        Factor factor2 = new Factor(FactorTest.matrix2, var2);
+        Variable<String> var3 = new Variable<>("c");
+        Variable<String> var4 = new Variable<>("d");
+        Variable<String> var5 = new Variable<>("e");
+        Factor factor1 = new Factor(FactorTest.distribution1, var1, var2, var3);
+        Factor factor2 = new Factor(FactorTest.distribution2, var4, var5);
         assertThrows(IllegalArgumentException.class, () -> Factor.factorProduct(factor1, factor2));
     }
 
@@ -236,7 +266,34 @@ class FactorTest {
     }
 
     @Test
-    void testMarginalization3() {
+    void testMarginalizationWithNullArgument() {
+        assertThrows(NullPointerException.class, () -> Factor.factorMarginalization(null, FactorTest.variables1));
+        assertThrows(NullPointerException.class, () -> {
+            Factor factor = new Factor(FactorTest.distribution1, FactorTest.variables1);
+            Factor.factorMarginalization(factor, (List<Variable<?>>) null);
+        });
+    }
+
+    @Test
+    void testMarginalizationWithEmptyVariables() {
+        Factor factor = new Factor(FactorTest.distribution1, FactorTest.variables1);
+        assertThrows(IllegalArgumentException.class, () -> Factor.factorMarginalization(factor, new ArrayList<Variable<?>>()));
+    }
+
+    @Test
+    void testMarginalizationWithNullElement() {
+        Factor factor = new Factor(FactorTest.distribution1, FactorTest.variables1);
+        List<Variable<?>> variables = new ArrayList<>();
+        Variable<String> var1 = new Variable<>("a");
+        Variable<String> var2 = new Variable<>("b");
+        variables.add(var1);
+        variables.add(null);
+        variables.add(var2);
+        assertThrows(IllegalArgumentException.class, () -> Factor.factorMarginalization(factor, variables));
+    }
+
+    @Test
+    void testMarginalizationWithMismatchVariables() {
         assertThrows(IllegalArgumentException.class, () -> {
             double[][] values1 = {
                     {0.5, 0.8}, {0.1, 0.0}
@@ -248,5 +305,81 @@ class FactorTest {
             Factor.factorMarginalization(factor1, var3);
         });
     }
+    @Test
+    void testJoinFactors() {
+        Variable<String> a = new Variable<>("a");
+        Variable<String> b = new Variable<>("b");
+        Variable<String> c = new Variable<>("c");
+        Variable<String> d = new Variable<>("d");
+
+        double[][] values1 = {
+                {0.5, 0.8}, {0.1, 0.0},
+        };
+        Factor factor1 = new Factor(Nd4j.create(values1), a, b);
+
+        double[][] values2 = {
+                {0.5, 0.7}, {0.1, 0.2},
+        };
+        Factor factor2 = new Factor(Nd4j.create(values2), b, c);
+
+        double[][] values3 = {
+                {0.3, 0.2}, {0.3, 0.6},
+        };
+        Factor factor3 = new Factor(Nd4j.create(values3), c, d);
+
+        double[][][][] values4 = {{{{0.075, 0.05 },
+                                   {0.105, 0.21 }},
+                                  {{0.024, 0.016},
+                                   {0.048, 0.096}}},
+                                 {{{0.015, 0.01 },
+                                   {0.021, 0.042}},
+                                  {{0.0,    0.   },
+                                   {0.,    0.   }}}};
+        Factor expectedFactor = new Factor(Nd4j.create(values4), a, b, c, d);
+
+        Factor joinedFactor = Factor.joinFactors(factor1, factor2, factor3);
+        assertEquals(expectedFactor, joinedFactor);
+    }
+
+    @Test
+    void testJoinFactorsWithNullArgument() {
+        assertThrows(NullPointerException.class, () -> Factor.joinFactors((Collection<Factor>) null));
+    }
+
+    @Test
+    void testJoinFactorsWithEmptyList() {
+        assertThrows(IllegalArgumentException.class, () -> Factor.joinFactors(new ArrayList<Factor>()));
+    }
+
+    @Test
+    void testJoinFactorWithNullElement() {
+        Variable<String> a = new Variable<>("a");
+        Variable<String> b = new Variable<>("b");
+        Variable<String> c = new Variable<>("c");
+        Variable<String> d = new Variable<>("d");
+
+        double[][] values1 = {
+                {0.5, 0.8}, {0.1, 0.0},
+        };
+        Factor factor1 = new Factor(Nd4j.create(values1), a, b);
+
+        double[][] values2 = {
+                {0.5, 0.7}, {0.1, 0.2},
+        };
+        Factor factor2 = new Factor(Nd4j.create(values2), b, c);
+
+        double[][] values3 = {
+                {0.3, 0.2}, {0.3, 0.6},
+        };
+        Factor factor3 = new Factor(Nd4j.create(values3), c, d);
+
+        List<Factor> factors = new ArrayList<>();
+        factors.add(factor1);
+        factors.add(null);
+        factors.add(factor2);
+        factors.add(factor3);
+        assertThrows(IllegalArgumentException.class, () -> Factor.joinFactors(factors));
+    }
+
 
 }

@@ -1,7 +1,6 @@
 package wyk.bp.graph;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.shade.errorprone.annotations.Var;
 import wyk.bp.utils.DistributionUtil;
 import wyk.bp.utils.Log;
 
@@ -65,6 +64,11 @@ public class Factor implements FactorGraphNode {
     public boolean haveSameVariable(final Factor otherFactor) {
         return this.variables.equals(otherFactor.getVariables());
     }
+
+    public boolean contains(final Variable<?> variable) {
+        return this.variables.contains(variable);
+    }
+
     @Override
     public int hashCode() {
         int result = this.distribution.hashCode();
@@ -149,5 +153,29 @@ public class Factor implements FactorGraphNode {
         INDArray newDistribution = factor.getDistribution().sum(sumDimensions);
         List<Variable<?>> newVariables = factor.getVariables().stream().filter(var -> !targetVariables.contains(var)).toList();
         return new Factor(newDistribution, newVariables);
+    }
+
+    public static Factor joinFactors(final Factor... factors) {
+        return Factor.joinFactors(Arrays.asList(factors));
+    }
+
+    public static Factor joinFactors(final Collection<Factor> factors) {
+        Objects.requireNonNull(factors, Log.genLogMsg("Factor", "Given factors cannot be null"));
+
+        // Given factors cannot contain null element
+        if (factors.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException(Log.genLogMsg("Factor", "Given factors list cannot contain"));
+        }
+
+        // Given factors cannot be empty
+        if (factors.isEmpty()) {
+            throw new IllegalArgumentException(Log.genLogMsg("Factor", "Give factors list cannot be empty"));
+        }
+
+        Factor factor = factors.stream().reduce(Factor::factorProduct).orElse(null);
+        if (factor == null) {
+            throw new RuntimeException(Log.genLogMsg("Factor", "Joint result is null"));
+        }
+        return factor;
     }
 }
