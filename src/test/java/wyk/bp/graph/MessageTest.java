@@ -421,4 +421,8 @@ class MessageTest {
         assertThrows(IllegalArgumentException.class, () -> Message.joinMessages(factors));
     }
 
+    @Test
+    void test() {
+        assertTrue(false);
+    }
 }
