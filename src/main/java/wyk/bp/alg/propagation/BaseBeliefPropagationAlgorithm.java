@@ -6,7 +6,7 @@ import wyk.bp.alg.interfaces.BeliefPropagationAlgorithm;
 import wyk.bp.graph.Factor;
 import wyk.bp.graph.FactorGraphNode;
 import wyk.bp.graph.Variable;
-import wyk.bp.probtable.ProbabilityTable;
+import wyk.bp.graph.ProbabilityTable;
 
 import java.util.HashMap;
 import java.util.Map;

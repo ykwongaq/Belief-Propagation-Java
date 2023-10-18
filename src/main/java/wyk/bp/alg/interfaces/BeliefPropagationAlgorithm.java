@@ -2,7 +2,7 @@ package wyk.bp.alg.interfaces;
 
 
 import wyk.bp.graph.Variable;
-import wyk.bp.probtable.ProbabilityTable;
+import wyk.bp.graph.ProbabilityTable;
 
 @FunctionalInterface
 public interface BeliefPropagationAlgorithm {

@@ -2,7 +2,7 @@ package wyk.bp.alg.propagation;
 
 import wyk.bp.graph.FactorGraph;
 import wyk.bp.graph.Variable;
-import wyk.bp.probtable.ProbabilityTable;
+import wyk.bp.graph.ProbabilityTable;
 
 public class BeliefPropagation<E> extends BaseBeliefPropagationAlgorithm<E> {
     public BeliefPropagation(FactorGraph<E> graph) {
