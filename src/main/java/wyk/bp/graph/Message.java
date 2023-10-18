@@ -31,6 +31,10 @@ public class Message extends ProbabilityTable {
         super(message);
     }
 
+    public Message(final ProbabilityTable table) {
+        super(table);
+    }
+
     public void moveAxis(int[] originDims, int[] targetDims) {
         if (originDims.length != targetDims.length) {
             throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Origin and target dimension array should have same size"));
@@ -147,5 +151,21 @@ public class Message extends ProbabilityTable {
             throw new RuntimeException(Log.genLogMsg("Message", "Joint result is null"));
         }
         return message;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = this.distribution.hashCode();
+        for (Variable<?> variable : this.variables) {
+            result = 7 * result + variable.hashCode();
+        }
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object otherObj) {
+        if (this == otherObj) return true;
+        if (otherObj == null || this.getClass() != otherObj.getClass()) return false;
+        return super.equals(otherObj);
     }
 }

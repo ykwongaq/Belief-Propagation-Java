@@ -28,4 +28,19 @@ public class Factor extends ProbabilityTable implements FactorGraphNode {
     public Factor(final Factor factor) {
         super(factor);
     }
+
+    @Override
+    public int hashCode() {
+        int result = this.distribution.hashCode();
+        for (Variable<?> variable : this.variables) {
+            result = 17 * result + variable.hashCode();
+        }
+        return result;
+    }
+    @Override
+    public boolean equals(Object otherObj) {
+        if (this == otherObj) return true;
+        if (otherObj == null || this.getClass() != otherObj.getClass()) return false;
+        return super.equals(otherObj);
+    }
 }
