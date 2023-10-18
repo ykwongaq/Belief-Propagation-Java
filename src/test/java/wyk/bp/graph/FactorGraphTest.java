@@ -2,9 +2,7 @@ package wyk.bp.graph;
 
 import org.jgrapht.graph.DefaultEdge;
 import org.junit.jupiter.api.Test;
-import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.shade.jackson.databind.ser.std.StdKeySerializers;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,10 +10,10 @@ class FactorGraphTest {
 
     @Test
     void testGraphConstruction() {
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
-        Variable<String> var3 = new Variable<>("c");
-        Variable<String> var4 = new Variable<>("d");
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
+        Variable<String> var3 = new Variable<>("c", 3);
+        Variable<String> var4 = new Variable<>("d", 2);
 
         double[][] values1 = {
                 {2.0d, 3.0d},
@@ -29,9 +27,6 @@ class FactorGraphTest {
         };
         Factor factor2 = new Factor(Nd4j.create(values2), var2, var4, var3);
 
-        double[] values3 = {5.0d, 1.0d, 9.0d};
-        Factor factor3 = new Factor(Nd4j.create(values3), var3);
-
         FactorGraph<DefaultEdge> factorGraph = new FactorGraph<>(DefaultEdge.class);
 
         assertThrows(IllegalArgumentException.class, () -> factorGraph.addEdge(factor1, factor2));
@@ -42,10 +37,10 @@ class FactorGraphTest {
 
     @Test
     void testValidGraph() {
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
-        Variable<String> var3 = new Variable<>("c");
-        Variable<String> var4 = new Variable<>("d");
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
+        Variable<String> var3 = new Variable<>("c", 3);
+        Variable<String> var4 = new Variable<>("d", 2);
 
         double[][] values1 = {
                 {2.0d, 3.0d},

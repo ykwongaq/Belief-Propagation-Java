@@ -39,6 +39,13 @@ public abstract class ProbabilityTable {
         if (variables.size() != distribution.rank()) {
             throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Given variables list size does not match with number of dimension of distribution: Number of variables: " + variables.size() + " Number of dimension: " + distribution.rank()));
         }
+
+        long[] dimensions = distribution.shape();
+        for (int idx=0; idx <variables.size(); idx++) {
+            if (dimensions[idx] != variables.get(idx).getStateCount()) {
+                throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Mismatch between dimension and variable state count. Dimension: " + dimensions[idx] + ", Variable state count: " + variables.get(idx).getStateCount()));
+            }
+        }
         this.variables = new ArrayList<>();
         this.variables.addAll(variables);
         this.distribution = distribution.dup();
