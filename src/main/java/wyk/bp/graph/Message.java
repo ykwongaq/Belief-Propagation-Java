@@ -1,6 +1,8 @@
 package wyk.bp.graph;
 
+import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 import wyk.bp.utils.DistributionUtil;
 import wyk.bp.utils.Log;
 
@@ -8,6 +10,15 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Message extends ProbabilityTable {
+
+    public Message(final Variable<?>... variables) {
+        this(Arrays.asList(variables));
+    }
+
+    public Message(final List<Variable<?>> variables) {
+        this(Nd4j.ones(variables.stream().mapToLong(Variable::getStateCount).toArray()).castTo(DataType.DOUBLE), variables);
+    }
+
     public Message(final INDArray distribution, final Variable<?>... variables) {
         this(distribution, Arrays.asList(variables));
     }

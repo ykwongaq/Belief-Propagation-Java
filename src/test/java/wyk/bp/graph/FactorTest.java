@@ -6,7 +6,6 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,9 +35,9 @@ class FactorTest {
     }
     static List<Variable<?>> initVariables1() {
         List<Variable<?>> variables1 = new ArrayList<>();
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
-        Variable<String> var3 = new Variable<>("d");
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
+        Variable<String> var3 = new Variable<>("d", 2);
         variables1.add(var1);
         variables1.add(var2);
         variables1.add(var3);
@@ -54,8 +53,8 @@ class FactorTest {
 
     static List<Variable<?>> initVariables2() {
         List<Variable<?>> variables1 = new ArrayList<>();
-        Variable<String> var1 = new Variable<>("b");
-        Variable<String> var2 = new Variable<>("c");
+        Variable<String> var1 = new Variable<>("b", 2);
+        Variable<String> var2 = new Variable<>("c", 2);
         variables1.add(var1);
         variables1.add(var2);
         return variables1;
@@ -67,6 +66,19 @@ class FactorTest {
         };
         return Nd4j.create(values);
     }
+
+    @Test
+    void testVariableConstructor() {
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
+        Factor message = new Factor(a, b);
+        double[][] values = {
+                {1.0d, 1.0d}, {1.0d, 1.0d}
+        };
+        Factor expectedMessage = new Factor(Nd4j.create(values), a, b);
+        assertEquals(expectedMessage, message);
+    }
+
     @Test
     void testConstructorWithNullArgument() {
         assertThrows(NullPointerException.class, () -> new Factor(null, FactorTest.variables1));
@@ -75,14 +87,14 @@ class FactorTest {
 
     @Test
     void testConstructorWithEmptyVariables() {
-        assertThrows(IllegalArgumentException.class, () -> new Factor(FactorTest.distribution1, new ArrayList<Variable<?>>()));
+        assertThrows(IllegalArgumentException.class, () -> new Factor(FactorTest.distribution1, new ArrayList<>()));
     }
 
     @Test
     void testConstructorWithNullElement() {
         List<Variable<?>> variables = new ArrayList<>();
-        Variable<String> a = new Variable<>("a");
-        Variable<String> b = new Variable<>("b");
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
         variables.add(a);
         variables.add(null);
         variables.add(b);
@@ -92,9 +104,20 @@ class FactorTest {
 
     @Test
     void testConstructorWithMismatchRank() {
-        Variable<String> a = new Variable<>("a");
-        Variable<String> b = new Variable<>("b");
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
         assertThrows(IllegalArgumentException.class, () -> new Factor(FactorTest.distribution1, a, b));
+    }
+
+    @Test
+    void testConstructionWithMismatchDimension() {
+        Variable<String> var1 = new Variable<>("b", 2);
+        Variable<String> var2 = new Variable<>("c", 2);
+        double[][] values = {
+                {0.5, 0.7, 0.1}, {0.1, 0.2, 0.3}
+        };
+
+        assertThrows(IllegalArgumentException.class, () -> new Factor(Nd4j.create(values), var1, var2));
     }
 
     @Test

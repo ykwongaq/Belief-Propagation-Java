@@ -35,9 +35,9 @@ class MessageTest {
     }
     static List<Variable<?>> initVariables1() {
         List<Variable<?>> variables1 = new ArrayList<>();
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
-        Variable<String> var3 = new Variable<>("d");
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
+        Variable<String> var3 = new Variable<>("d", 2);
         variables1.add(var1);
         variables1.add(var2);
         variables1.add(var3);
@@ -53,8 +53,8 @@ class MessageTest {
 
     static List<Variable<?>> initVariables2() {
         List<Variable<?>> variables1 = new ArrayList<>();
-        Variable<String> var1 = new Variable<>("b");
-        Variable<String> var2 = new Variable<>("c");
+        Variable<String> var1 = new Variable<>("b", 2);
+        Variable<String> var2 = new Variable<>("c", 2);
         variables1.add(var1);
         variables1.add(var2);
         return variables1;
@@ -67,6 +67,17 @@ class MessageTest {
         return Nd4j.create(values);
     }
 
+    @Test
+    void testVariableConstructor() {
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
+        Message message = new Message(a, b);
+        double[][] values = {
+                {1.0d, 1.0d}, {1.0d, 1.0d}
+        };
+        Message expectedMessage = new Message(Nd4j.create(values), a, b);
+        assertEquals(expectedMessage, message);
+    }
     @Test
     void testConstructorWithNullArgument() {
         assertThrows(NullPointerException.class, () -> new Message(null, MessageTest.variables1));
@@ -81,8 +92,8 @@ class MessageTest {
     @Test
     void testConstructorWithNullElement() {
         List<Variable<?>> variables = new ArrayList<>();
-        Variable<String> a = new Variable<>("a");
-        Variable<String> b = new Variable<>("b");
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
         variables.add(a);
         variables.add(null);
         variables.add(b);
@@ -92,9 +103,20 @@ class MessageTest {
 
     @Test
     void testConstructorWithMismatchRank() {
-        Variable<String> a = new Variable<>("a");
-        Variable<String> b = new Variable<>("b");
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
         assertThrows(IllegalArgumentException.class, () -> new Message(MessageTest.distribution1, a, b));
+    }
+
+    @Test
+    void testConstructionWithMismatchDimension() {
+        Variable<String> var1 = new Variable<>("b", 2);
+        Variable<String> var2 = new Variable<>("c", 2);
+        double[][] values = {
+                {0.5, 0.7, 0.1}, {0.1, 0.2, 0.3}
+        };
+
+        assertThrows(IllegalArgumentException.class, () -> new Message(Nd4j.create(values), var1, var2));
     }
 
     @Test
@@ -151,8 +173,8 @@ class MessageTest {
 
     @Test
     void testNormalize() {
-        Variable<String> a = new Variable<>("a");
-        Variable<String> b = new Variable<>("b");
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
 
         double[][] values = {
                 {0.5, 0.8}, {0.1, 0.0}
@@ -172,14 +194,14 @@ class MessageTest {
         double[][] values1 = {
                 {0.5, 0.8}, {0.1, 0.0}, {0.3, 0.9}
         };
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
+        Variable<String> var1 = new Variable<>("a", 3);
+        Variable<String> var2 = new Variable<>("b", 2);
         Message message1 = new Message(Nd4j.create(values1), var1, var2);
 
         double[][] values2 = {
                 {0.5, 0.7}, {0.1, 0.2}
         };
-        Variable<String> var3 = new Variable<>("c");
+        Variable<String> var3 = new Variable<>("c", 2);
         Message message2 = new Message(Nd4j.create(values2), var2, var3);
 
 
@@ -198,14 +220,14 @@ class MessageTest {
         double[][] values1 = {
                 {0.5, 0.8}, {0.1, 0.0}
         };
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
         Message message1 = new Message(Nd4j.create(values1), var2, var1);
 
         double[][] values2 = {
                 {0.5, 0.7}, {0.1, 0.2}
         };
-        Variable<String> var3 = new Variable<>("c");
+        Variable<String> var3 = new Variable<>("c", 2);
         Message message2 = new Message(Nd4j.create(values2), var2, var3);
 
         double[][][] expectedValues = {
@@ -231,11 +253,11 @@ class MessageTest {
 
     @Test
     void testProductWithMismatchVariables() {
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
-        Variable<String> var3 = new Variable<>("c");
-        Variable<String> var4 = new Variable<>("d");
-        Variable<String> var5 = new Variable<>("e");
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
+        Variable<String> var3 = new Variable<>("c", 2);
+        Variable<String> var4 = new Variable<>("d", 2);
+        Variable<String> var5 = new Variable<>("e", 2);
         Message message1 = new Message(MessageTest.distribution1, var1, var2, var3);
         Message message2 = new Message(MessageTest.distribution2, var4, var5);
         assertThrows(IllegalArgumentException.class, () -> Message.messageProduct(message1, message2));
@@ -248,9 +270,9 @@ class MessageTest {
                 {{0.05, 0.07}, {0.0, 0.0}},
                 {{0.15, 0.21}, {0.09, 0.18}}
         };
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
-        Variable<String> var3 = new Variable<>("c");
+        Variable<String> var1 = new Variable<>("a", 3);
+        Variable<String> var2 = new Variable<>("b", 2);
+        Variable<String> var3 = new Variable<>("c", 2);
         Message message = new Message(Nd4j.create(values), var1, var2, var3);
 
         double[][] expectedValues = {
@@ -269,9 +291,9 @@ class MessageTest {
                 {{0.05, 0.07}, {0.0, 0.0}},
                 {{0.15, 0.21}, {0.09, 0.18}}
         };
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
-        Variable<String> var3 = new Variable<>("c");
+        Variable<String> var1 = new Variable<>("a", 3);
+        Variable<String> var2 = new Variable<>("b", 2);
+        Variable<String> var3 = new Variable<>("c", 2);
         Message message = new Message(Nd4j.create(values), var1, var2, var3);
 
         double[] expectedValues = {
@@ -302,8 +324,8 @@ class MessageTest {
     void testMarginalizationWithNullElement() {
         Message message = new Message(MessageTest.distribution1, MessageTest.variables1);
         List<Variable<?>> variables = new ArrayList<>();
-        Variable<String> var1 = new Variable<>("a");
-        Variable<String> var2 = new Variable<>("b");
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
         variables.add(var1);
         variables.add(null);
         variables.add(var2);
@@ -316,19 +338,19 @@ class MessageTest {
             double[][] values1 = {
                     {0.5, 0.8}, {0.1, 0.0}
             };
-            Variable<String> var1 = new Variable<>("a");
-            Variable<String> var2 = new Variable<>("b");
-            Variable<String> var3 = new Variable<>("c");
+            Variable<String> var1 = new Variable<>("a", 2);
+            Variable<String> var2 = new Variable<>("b", 2);
+            Variable<String> var3 = new Variable<>("c", 2);
             Message message = new Message(Nd4j.create(values1), var2, var1);
             Message.messageMarginalization(message, var3);
         });
     }
     @Test
     void testJoinMessages() {
-        Variable<String> a = new Variable<>("a");
-        Variable<String> b = new Variable<>("b");
-        Variable<String> c = new Variable<>("c");
-        Variable<String> d = new Variable<>("d");
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
+        Variable<String> c = new Variable<>("c", 2);
+        Variable<String> d = new Variable<>("d", 2);
 
         double[][] values1 = {
                 {0.5, 0.8}, {0.1, 0.0},
@@ -371,10 +393,10 @@ class MessageTest {
 
     @Test
     void testJoinMessageWithNullElement() {
-        Variable<String> a = new Variable<>("a");
-        Variable<String> b = new Variable<>("b");
-        Variable<String> c = new Variable<>("c");
-        Variable<String> d = new Variable<>("d");
+        Variable<String> a = new Variable<>("a", 2);
+        Variable<String> b = new Variable<>("b", 2);
+        Variable<String> c = new Variable<>("c", 2);
+        Variable<String> d = new Variable<>("d", 2);
 
         double[][] values1 = {
                 {0.5, 0.8}, {0.1, 0.0},
