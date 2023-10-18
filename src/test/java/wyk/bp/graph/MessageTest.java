@@ -398,9 +398,4 @@ class MessageTest {
         factors.add(message3);
         assertThrows(IllegalArgumentException.class, () -> Message.joinMessages(factors));
     }
-
-    @Test
-    void test() {
-        assertTrue(false);
-    }
 }
