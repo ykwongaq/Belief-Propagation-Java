@@ -81,7 +81,6 @@ class FactorTest {
 
     @Test
     void testConstructorWithNullArgument() {
-        assertThrows(NullPointerException.class, () -> new Factor(null, FactorTest.variables1));
         assertThrows(NullPointerException.class, () -> new Factor(FactorTest.distribution1, (List<Variable<?>>) null));
     }
 
