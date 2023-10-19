@@ -1,5 +1,6 @@
 package wyk.bp.graph;
 
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.Pseudograph;
 import wyk.bp.utils.Log;
 
@@ -20,6 +21,7 @@ public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
         }
         return super.addEdge(factor, variable);
     }
+
 
     public E addEdge(final Variable<?> variable, final Factor factor) {
         return this.addEdge(factor, variable);
@@ -88,5 +90,19 @@ public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
             }
         }
         return true;
+    }
+
+    public List<? extends Variable<?>> getIncomingVariables(final Factor factor, final Variable<?> parentVariable) {
+        return Graphs.neighborListOf(this, factor).stream()
+                .filter(neighbor -> !neighbor.equals(parentVariable))
+                .map(neighbor -> (Variable<?>) neighbor)
+                .toList();
+    }
+
+    public List<Factor> getIncomingFactors(final Variable<?> variable, final Factor parentFactor) {
+        return Graphs.neighborListOf(this, variable).stream().
+                filter(neighbor -> !neighbor.equals(parentFactor))
+                .map(neighbor -> (Factor) neighbor)
+                .toList();
     }
 }
