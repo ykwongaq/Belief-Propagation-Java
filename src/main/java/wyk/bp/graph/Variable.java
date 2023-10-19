@@ -39,4 +39,9 @@ public class Variable<T> implements FactorGraphNode {
         result = 31 * result + this.stateCount;
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "Variable: " + this.data.toString();
+    }
 }
