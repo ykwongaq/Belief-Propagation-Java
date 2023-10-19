@@ -83,12 +83,12 @@ public class Message extends ProbabilityTable {
         final int[] originDims1 = IntStream.range(0, message1.getVariables().size()).toArray();
         final int[] targetDims1 = Message.findIndices(newVariables.stream().filter(message1.getVariables()::contains).toList(), message1.getVariables());
         INDArray distribution1 = DistributionUtil.moveaxis(message1.getDistribution(), originDims1, targetDims1);
-        distribution1 = DistributionUtil.appendDimensions(distribution1, commonVariables.size(), false);
+        distribution1 = DistributionUtil.appendDimensions(distribution1, newVariables.size() - message1.getVariables().size(), false);
 
         final int[] originDims2 = IntStream.range(0, message2.getVariables().size()).toArray();
         final int[] targetDims2 = Message.findIndices(newVariables.stream().filter(message2.getVariables()::contains).toList(), message2.getVariables());
         INDArray distribution2 = DistributionUtil.moveaxis(message2.getDistribution(), originDims2, targetDims2);
-        distribution2 = DistributionUtil.appendDimensions(distribution2, commonVariables.size(), true);
+        distribution2 = DistributionUtil.appendDimensions(distribution2, newVariables.size() - message2.getVariables().size(), true);
 
         // Calculate new distribution
         final INDArray newDistribution = distribution1.mul(distribution2);
@@ -167,5 +167,10 @@ public class Message extends ProbabilityTable {
         if (this == otherObj) return true;
         if (otherObj == null || this.getClass() != otherObj.getClass()) return false;
         return super.equals(otherObj);
+    }
+
+    @Override
+    public String toString() {
+        return "Message: " + this.variables;
     }
 }

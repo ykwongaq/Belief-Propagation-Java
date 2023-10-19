@@ -28,7 +28,7 @@ public class DistributionUtil {
 
     public static INDArray appendDimensions(final INDArray inputArray, int dimensionsToAppend, boolean atBeginning) {
         Objects.requireNonNull(inputArray, Log.genLogMsg("DistributionUtil", "Given array should not be null"));
-        if (dimensionsToAppend <= 0) {
+        if (dimensionsToAppend < 0) {
             throw new IllegalArgumentException(Log.genLogMsg("DistributionUtil", "Given dimensionsToAppend should not be less than one. But " + dimensionsToAppend + " is given"));
         }
 

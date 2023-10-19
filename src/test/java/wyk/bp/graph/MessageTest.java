@@ -240,6 +240,29 @@ class MessageTest {
     }
 
     @Test
+    void testProduct3() {
+        Variable<String> var1 = new Variable<>("a", 2);
+        Variable<String> var2 = new Variable<>("b", 2);
+        double[][] values1 = {
+                {0.5, 0.8}, {0.1, 0.0}
+        };
+        double[] values2 = {
+                0.5, 0.7
+        };
+
+        Message message1 = new Message(Nd4j.create(values1), var1, var2);
+        Message message2 = new Message(Nd4j.create(values2), var1);
+        Message result = Message.messageProduct(message1, message2);
+
+        double[][] values3 = {
+                {0.25, 0.07}, {0.4, 0.0}
+        };
+        Message expectedMessage = new Message(Nd4j.create(values3), var2, var1);
+
+        assertEquals(expectedMessage, result);
+    }
+
+    @Test
     void testProductWithNullArgument() {
         assertThrows(NullPointerException.class, () -> {
             Message message = new Message(MessageTest.distribution1, MessageTest.variables1);
