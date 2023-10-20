@@ -86,12 +86,7 @@ class BeliefPropagationTest {
         factorGraph.addFactor(factor2);
         factorGraph.addFactor(factor3);
 
-        factorGraph.addEdge(var1, factor1);
-        factorGraph.addEdge(var2, factor1);
-        factorGraph.addEdge(factor2, var2, new DefaultEdge());
-        factorGraph.addEdge(var3, factor2, new DefaultEdge());
-        factorGraph.addEdge(factor2, var4);
-        factorGraph.addEdge(factor3, var3);
+        factorGraph.fillEdges();
 
         BeliefPropagation<DefaultEdge> beliefPropagation = new BeliefPropagation<>(factorGraph);
 

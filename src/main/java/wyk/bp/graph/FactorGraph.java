@@ -4,13 +4,17 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.Pseudograph;
 import wyk.bp.utils.Log;
 
+import java.util.HashSet;
 import java.util.List;
 import java.io.Serial;
+import java.util.Objects;
+import java.util.Set;
 
 public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
     private static final String SAME_TYPE_CONNECTION_ERROR_MSG = "Cannot connect two vertex with same type 1. Vertex and Vertex or 2. Factor and Factor";
     @Serial
     private static final long serialVersionUID = -7574564204896552580L;
+
     public FactorGraph(Class<? extends E> edgeClass) {
         super(edgeClass);
     }
@@ -104,5 +108,38 @@ public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
                 filter(neighbor -> !neighbor.equals(parentFactor))
                 .map(neighbor -> (Factor) neighbor)
                 .toList();
+    }
+
+    public Set<Variable<?>> variableSet() {
+        return new HashSet<>(this.vertexSet().stream()
+                .filter(vertex -> vertex instanceof Variable<?>)
+                .map(variable -> (Variable<?>) variable)
+                .toList());
+    }
+
+    public Set<Factor> factorSet() {
+        return new HashSet<>(this.vertexSet().stream()
+                .filter(vertex -> vertex instanceof Factor)
+                .map(factor -> (Factor) factor)
+                .toList());
+    }
+
+    public void fillEdges() {
+        Set<Variable<?>> requiredVariables = new HashSet<>(this.factorSet().stream()
+                        .flatMap(factor -> factor.getVariables().stream())
+                        .toList());
+        Set<Variable<?>> variables = this.variableSet();
+        if (!variables.containsAll(requiredVariables)) {
+            Set<Variable<?>> missingVariables = new HashSet<>(requiredVariables.stream()
+                    .filter(variable -> !variables.contains(variable))
+                    .toList());
+            throw new RuntimeException(Log.genLogMsg(this.getClass(),
+                    "There are missing variables: " + missingVariables));
+        }
+        for (Factor factor  : this.factorSet()) {
+            for (Variable<?> variable : factor.getVariables()) {
+                this.addEdge(factor, variable);
+            }
+        }
     }
 }
