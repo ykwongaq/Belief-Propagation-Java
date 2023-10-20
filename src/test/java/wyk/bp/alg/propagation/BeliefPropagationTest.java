@@ -3,13 +3,13 @@ package wyk.bp.alg.propagation;
 import org.jgrapht.graph.DefaultEdge;
 import org.junit.jupiter.api.Test;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.shade.jackson.databind.ser.std.StdKeySerializers;
 import wyk.bp.graph.Factor;
 import wyk.bp.graph.FactorGraph;
 import wyk.bp.graph.Message;
 import wyk.bp.graph.Variable;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BeliefPropagationTest {
 
@@ -51,7 +51,7 @@ class BeliefPropagationTest {
         factorGraph.addEdge(var3, factor2, new DefaultEdge());
         factorGraph.addEdge(factor2, var4);
 
-        assertThrows(IllegalArgumentException.class, () -> new BeliefPropagation<DefaultEdge>(factorGraph));
+        assertThrows(IllegalArgumentException.class, () -> new BeliefPropagation<>(factorGraph));
     }
 
     @Test

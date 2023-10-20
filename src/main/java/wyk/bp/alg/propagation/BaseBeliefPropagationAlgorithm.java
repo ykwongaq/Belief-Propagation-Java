@@ -1,6 +1,5 @@
 package wyk.bp.alg.propagation;
 
-import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.util.Pair;
 import wyk.bp.alg.interfaces.BeliefPropagationAlgorithm;
