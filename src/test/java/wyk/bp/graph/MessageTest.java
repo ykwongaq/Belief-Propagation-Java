@@ -129,7 +129,7 @@ class MessageTest {
         int[] originDims = {0, 1, 2};
         int[] targetDims = {2, 0, 1};
         Message message = new Message(MessageTest.distribution1, MessageTest.variables1);
-        message.moveAxis(originDims, targetDims);
+        message = message.moveAxis(originDims, targetDims);
         assertEquals(expected, message.getDistribution());
     }
 

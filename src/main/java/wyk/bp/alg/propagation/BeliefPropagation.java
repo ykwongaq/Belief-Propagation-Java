@@ -9,7 +9,19 @@ import wyk.bp.utils.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Belief Propagation algorithm is run in recursive manner. It requires {@link FactorGraph} to be a tree (without any cycle) or else
+ * this algorithm will run into infinite loop.
+ *
+ * @param <E> Edge type.
+ */
 public class BeliefPropagation<E> extends BaseBeliefPropagationAlgorithm<E> {
+    /**
+     * Constructor.
+     * @param graph Factor graph.
+     * @throws IllegalArgumentException if the given graph contain cycle.
+     * @see UndirectedCycleDetector#detectCycles()
+     */
     public BeliefPropagation(FactorGraph<E> graph) {
         super(graph);
         UndirectedCycleDetector<FactorGraphNode, E> cycleDetector = new UndirectedCycleDetector<>(this.graph);

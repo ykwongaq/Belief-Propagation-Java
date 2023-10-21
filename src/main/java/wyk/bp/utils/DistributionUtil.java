@@ -1,6 +1,9 @@
 package wyk.bp.utils;
 
+import org.nd4j.common.util.ArrayUtil;
+import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -10,7 +13,6 @@ import java.util.stream.LongStream;
  * Utility class to handle distribution.
  *
  * @author WYK
- * @since 1.0
  */
 public class DistributionUtil {
 
@@ -19,7 +21,7 @@ public class DistributionUtil {
      *
      * Suppose {@code array} is an array with shape {@code [2, 3, 4]}.
      * <pre>
-     *     array2 = moveaxis(array, {0, 1, 2}, {0, 2, 1}
+     *     array2 = moveaxis(array, {0, 1, 2}, {0, 2, 1})
      * </pre>
      * Then {@code array2} should have the shape {@code [2, 4, 3]}.<br/>
      *
@@ -111,5 +113,36 @@ public class DistributionUtil {
         }
 
         return inputArray.reshape(newShape);
+    }
+
+    public static INDArray create(float[] data) {
+        return Nd4j.create(data);
+    }
+    public static INDArray create(double[] data) {
+        return Nd4j.create(data);
+    }
+
+    public static INDArray create(float[][] data) {
+        return Nd4j.create(data);
+    }
+
+    public static INDArray create(double[][] data) {
+        return Nd4j.create(data);
+    }
+
+    public static INDArray create(double[][][] data) {
+        return Nd4j.create(data);
+    }
+
+    public static INDArray create(float[][][] data) {
+        return Nd4j.create(data);
+    }
+
+    public static INDArray create(double[][][][] data) {
+        return Nd4j.create(data);
+    }
+
+    public static INDArray create(float[][][][] data) {
+        return Nd4j.create(data);
     }
 }

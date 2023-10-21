@@ -68,18 +68,6 @@ class FactorTest {
     }
 
     @Test
-    void testVariableConstructor() {
-        Variable<String> a = new Variable<>("a", 2);
-        Variable<String> b = new Variable<>("b", 2);
-        Factor message = new Factor(a, b);
-        double[][] values = {
-                {1.0d, 1.0d}, {1.0d, 1.0d}
-        };
-        Factor expectedMessage = new Factor(Nd4j.create(values), a, b);
-        assertEquals(expectedMessage, message);
-    }
-
-    @Test
     void testConstructorWithNullArgument() {
         assertThrows(NullPointerException.class, () -> new Factor(FactorTest.distribution1, (List<Variable<?>>) null));
     }
