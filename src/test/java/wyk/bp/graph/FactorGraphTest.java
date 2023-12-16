@@ -2,7 +2,6 @@ package wyk.bp.graph;
 
 import org.jgrapht.graph.DefaultEdge;
 import org.junit.jupiter.api.Test;
-import org.nd4j.linalg.factory.Nd4j;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,13 +18,13 @@ class FactorGraphTest {
                 {2.0d, 3.0d},
                 {6.0d, 4.0d},
         };
-        Factor factor1 = new Factor(Nd4j.create(values1), var1, var2);
+        Factor factor1 = new Factor(HDArray.create(values1), var1, var2);
 
         double[][][] values2 = {
                 {{7.0d, 2.0d, 3.0d}, {1.0d, 5.0d, 2.0d}},
                 {{8.0d, 3.0d, 9.0d}, {6.0d, 4.0d, 2.0d}},
         };
-        Factor factor2 = new Factor(Nd4j.create(values2), var2, var4, var3);
+        Factor factor2 = new Factor(HDArray.create(values2), var2, var4, var3);
 
         FactorGraph<DefaultEdge> factorGraph = new FactorGraph<>(DefaultEdge.class);
 
@@ -46,16 +45,16 @@ class FactorGraphTest {
                 {2.0d, 3.0d},
                 {6.0d, 4.0d},
         };
-        Factor factor1 = new Factor(Nd4j.create(values1), var1, var2);
+        Factor factor1 = new Factor(HDArray.create(values1), var1, var2);
 
         double[][][] values2 = {
                 {{7.0d, 2.0d, 3.0d}, {1.0d, 5.0d, 2.0d}},
                 {{8.0d, 3.0d, 9.0d}, {6.0d, 4.0d, 2.0d}},
         };
-        Factor factor2 = new Factor(Nd4j.create(values2), var2, var4, var3);
+        Factor factor2 = new Factor(HDArray.create(values2), var2, var4, var3);
 
         double[] values3 = {5.0d, 1.0d, 9.0d};
-        Factor factor3 = new Factor(Nd4j.create(values3), var3);
+        Factor factor3 = new Factor(HDArray.create(values3), var3);
 
         FactorGraph<DefaultEdge> factorGraph = new FactorGraph<>(DefaultEdge.class);
         assertFalse(factorGraph.isValid());
@@ -91,16 +90,16 @@ class FactorGraphTest {
                 {2.0d, 3.0d},
                 {6.0d, 4.0d},
         };
-        Factor factor1 = new Factor(Nd4j.create(values1), var1, var2);
+        Factor factor1 = new Factor(HDArray.create(values1), var1, var2);
 
         double[][][] values2 = {
                 {{7.0d, 2.0d, 3.0d}, {1.0d, 5.0d, 2.0d}},
                 {{8.0d, 3.0d, 9.0d}, {6.0d, 4.0d, 2.0d}},
         };
-        Factor factor2 = new Factor(Nd4j.create(values2), var2, var4, var3);
+        Factor factor2 = new Factor(HDArray.create(values2), var2, var4, var3);
 
         double[] values3 = {5.0d, 1.0d, 9.0d};
-        Factor factor3 = new Factor(Nd4j.create(values3), var3);
+        Factor factor3 = new Factor(HDArray.create(values3), var3);
 
         FactorGraph<DefaultEdge> factorGraph = new FactorGraph<>(DefaultEdge.class);
         assertFalse(factorGraph.isValid());
@@ -128,16 +127,16 @@ class FactorGraphTest {
                 {2.0d, 3.0d},
                 {6.0d, 4.0d},
         };
-        Factor factor1 = new Factor(Nd4j.create(values1), var1, var2);
+        Factor factor1 = new Factor(HDArray.create(values1), var1, var2);
 
         double[][][] values2 = {
                 {{7.0d, 2.0d, 3.0d}, {1.0d, 5.0d, 2.0d}},
                 {{8.0d, 3.0d, 9.0d}, {6.0d, 4.0d, 2.0d}},
         };
-        Factor factor2 = new Factor(Nd4j.create(values2), var2, var4, var3);
+        Factor factor2 = new Factor(HDArray.create(values2), var2, var4, var3);
 
         double[] values3 = {5.0d, 1.0d, 9.0d};
-        Factor factor3 = new Factor(Nd4j.create(values3), var3);
+        Factor factor3 = new Factor(HDArray.create(values3), var3);
 
         FactorGraph<DefaultEdge> factorGraph = new FactorGraph<>(DefaultEdge.class);
         assertFalse(factorGraph.isValid());

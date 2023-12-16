@@ -7,7 +7,6 @@ import wyk.bp.utils.Log;
 import java.util.HashSet;
 import java.util.List;
 import java.io.Serial;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -37,7 +36,7 @@ public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
      * @throws IllegalArgumentException if the given {@code variable} is not contained by {@code factor}.
      */
     public E addEdge(final Factor factor, final Variable<?> variable) {
-        if (!factor.contains(variable)) {
+        if (!factor.containsVariable(variable)) {
             throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Trying to add edge between unrelated variables. Factor variables: " + factor.getVariables() + " Variable: " + variable));
         }
         return super.addEdge(factor, variable);
@@ -64,7 +63,7 @@ public class FactorGraph<E> extends Pseudograph<FactorGraphNode, E> {
      * @throws IllegalArgumentException if the given {@code factor} does not contain the {@code variable}.
      */
     public boolean addEdge(final Factor factor, final Variable<?> variable, final E edge) {
-        if (!factor.contains(variable)) {
+        if (!factor.containsVariable(variable)) {
             throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Trying to add edge between unrelated variables. Factor variables: " + factor.getVariables() + " Variable: " + variable));
         }
         return super.addEdge(factor, variable, edge);

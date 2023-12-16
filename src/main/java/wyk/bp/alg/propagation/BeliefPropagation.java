@@ -1,7 +1,5 @@
 package wyk.bp.alg.propagation;
 
-import org.jgrapht.Graphs;
-import org.jgrapht.graph.DefaultEdge;
 import wyk.bp.alg.cycle.UndirectedCycleDetector;
 import wyk.bp.graph.*;
 import wyk.bp.utils.Log;
@@ -37,7 +35,7 @@ public class BeliefPropagation<E> extends BaseBeliefPropagationAlgorithm<E> {
             Message message = this.getFactorToVariableMessage(neighborFactor, variable);
             incomingMessages.add(message);
         }
-        Message jointedMessage = Message.joinMessages(incomingMessages);
+        Message jointedMessage = Message.messageProduct(incomingMessages);
         jointedMessage.normalize();
         return jointedMessage;
     }

@@ -1,6 +1,5 @@
 package wyk.bp.alg.propagation;
 
-import org.jgrapht.Graphs;
 import org.jgrapht.alg.util.Pair;
 import wyk.bp.alg.interfaces.BeliefPropagationAlgorithm;
 import wyk.bp.graph.*;
@@ -95,7 +94,7 @@ abstract public class BaseBeliefPropagationAlgorithm<E> implements BeliefPropaga
         if (incomingMessages.isEmpty()) {
             return new Message(variable);
         } else {
-            Message message = Message.joinMessages(incomingMessages);
+            Message message = Message.messageProduct(incomingMessages);
             message.normalize();
             return message;
         }
@@ -157,7 +156,7 @@ abstract public class BaseBeliefPropagationAlgorithm<E> implements BeliefPropaga
         if (incomingMessages.size() == 1) {
             return incomingMessages.get(0);
         } else {
-            Message joinedMessage = Message.joinMessages(incomingMessages);
+            Message joinedMessage = Message.messageProduct(incomingMessages);
             Message marginalizedMessage = Message.messageMarginalization(joinedMessage, marginalizationVariables);
             marginalizedMessage.normalize();
             return marginalizedMessage;

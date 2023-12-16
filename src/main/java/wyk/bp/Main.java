@@ -1,12 +1,8 @@
 package wyk.bp;
 
 import org.jgrapht.graph.DefaultEdge;
-import org.nd4j.linalg.factory.Nd4j;
 import wyk.bp.alg.propagation.BeliefPropagation;
-import wyk.bp.graph.Factor;
-import wyk.bp.graph.FactorGraph;
-import wyk.bp.graph.Message;
-import wyk.bp.graph.Variable;
+import wyk.bp.graph.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -31,18 +27,18 @@ public class Main {
                 {2.0d, 3.0d},
                 {6.0d, 4.0d},
         };
-        Factor factor1 = new Factor("f1", Nd4j.create(distribution1), a, b);
+        Factor factor1 = new Factor("f1", HDArray.create(distribution1), a, b);
 
         // Create factor 2
         double[][][] distribution2 = {
                 {{7.0d, 2.0d, 3.0d}, {1.0d, 5.0d, 2.0d}},
                 {{8.0d, 3.0d, 9.0d}, {6.0d, 4.0d, 2.0d}},
         };
-        Factor factor2 = new Factor("f2", Nd4j.create(distribution2), b, d, c);
+        Factor factor2 = new Factor("f2", HDArray.create(distribution2), b, d, c);
 
         // Create factor 3
         double[] distribution3 = {5.0d, 1.0d, 9.0d};
-        Factor factor3 = new Factor("f3", Nd4j.create(distribution3), c);
+        Factor factor3 = new Factor("f3", HDArray.create(distribution3), c);
 
         // Add factors into graph
         factorGraph.addFactor(factor1);
@@ -56,7 +52,7 @@ public class Main {
         BeliefPropagation<DefaultEdge> beliefPropagation = new BeliefPropagation<>(factorGraph);
         Message message = beliefPropagation.getBelief(b);
 
-        System.out.println("Probability for b_1: " + message.getDistribution().getDouble(0));
-        System.out.println("Probability for b_2: " + message.getDistribution().getDouble(1));
+        System.out.println("Probability for b_1: " + message.getProbability().get(0));
+        System.out.println("Probability for b_2: " + message.getProbability().get(1));
     }
 }

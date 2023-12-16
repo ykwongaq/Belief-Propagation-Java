@@ -2,8 +2,6 @@ package wyk.bp.graph;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FactorTest {
 
-    protected static INDArray distribution1;
+    protected static HDArray distribution1;
     protected static List<Variable<?>> variables1;
-    protected static INDArray distribution2;
+    protected static HDArray distribution2;
     protected static List<Variable<?>> variables2;
 
-    protected static INDArray distribution3;
+    protected static HDArray distribution3;
 
     @BeforeAll
     static void initTestCase() {
@@ -27,11 +25,11 @@ class FactorTest {
         FactorTest.variables2 = FactorTest.initVariables2();
         FactorTest.distribution3 = FactorTest.initDistribution3();
     }
-    static INDArray initDistribution1() {
+    static HDArray initDistribution1() {
         double[][][] values = {
                 {{0.2, 0.5}, {0.6, 0.5}}, {{1.0, 0.6}, {0.2, 0.3}}
         };
-        return Nd4j.create(values);
+        return HDArray.create(values);
     }
     static List<Variable<?>> initVariables1() {
         List<Variable<?>> variables1 = new ArrayList<>();
@@ -44,11 +42,11 @@ class FactorTest {
         return variables1;
     }
 
-    static INDArray initDistribution2() {
+    static HDArray initDistribution2() {
         double[][] values = {
                 {0.5, 0.7}, {0.1, 0.2}
         };
-        return Nd4j.create(values);
+        return HDArray.create(values);
     }
 
     static List<Variable<?>> initVariables2() {
@@ -60,11 +58,11 @@ class FactorTest {
         return variables1;
     }
 
-    static INDArray initDistribution3() {
+    static HDArray initDistribution3() {
         double[][][] values = {
                 {{0.2, 0.5}, {0.6, 0.4}}, {{1.0, 0.6}, {0.2, 0.3}}
         };
-        return Nd4j.create(values);
+        return HDArray.create(values);
     }
 
     @Test
@@ -104,7 +102,7 @@ class FactorTest {
                 {0.5, 0.7, 0.1}, {0.1, 0.2, 0.3}
         };
 
-        assertThrows(IllegalArgumentException.class, () -> new Factor(Nd4j.create(values), var1, var2));
+        assertThrows(IllegalArgumentException.class, () -> new Factor(HDArray.create(values), var1, var2));
     }
 
     @Test
@@ -125,8 +123,8 @@ class FactorTest {
         Factor factor2 = new Factor(FactorTest.distribution2, FactorTest.variables2);
         Factor factor3 = new Factor(FactorTest.distribution3, FactorTest.variables1);
 
-        assertTrue(factor1.haveSameVariable(factor3));
-        assertFalse(factor1.haveSameVariable(factor2));
+        assertTrue(factor1.haveSameVariables(factor3));
+        assertFalse(factor1.haveSameVariables(factor2));
     }
 
 

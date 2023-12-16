@@ -1,248 +1,293 @@
 package wyk.bp.graph;
 
-import org.nd4j.linalg.api.buffer.DataType;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
-import wyk.bp.utils.DistributionUtil;
 import wyk.bp.utils.Log;
-
 import java.util.*;
 import java.util.stream.IntStream;
 
 /**
- * Message which is going to be propagated across the {@link FactorGraph}.
+ * Message class represents a message in a belief propagation algorithm.
+ * Message is a probability table with a list of variables.
+ * Message class provides methods to calculate marginalization and product of messages.
+ * Message class is immutable.
+ * @see ProbabilityTable
  */
 public class Message extends ProbabilityTable {
-
     /**
-     * Constructor with default equal probability distribution.
+     * Constructor. Call {@link ProbabilityTable#ProbabilityTable(HDArray, List)}.
+     * @param probability Probability distributions array.
      * @param variables Array of variables.
-     * @see #Message(INDArray, Variable[])
      */
-    public Message(final Variable<?>... variables) {
-        this(Arrays.asList(variables));
+    public Message(final HDArray probability, final Variable<?>... variables) {
+        super(probability, variables);
     }
 
     /**
-     * Constructor with default equal probability distribution.
+     * Constructor. Call {@link ProbabilityTable#ProbabilityTable(HDArray, List)}.
+     * @param probability Probability distributions array.
      * @param variables List of variables.
-     * @see #Message(INDArray, List)
+     */
+    public Message(final HDArray probability, final List<Variable<?>> variables) {
+        super(probability, variables);
+    }
+
+    /**
+     * Constructor. Call {@link #Message(HDArray, List)}.
+     * @param variables Array of variables.
      */
     public Message(final List<Variable<?>> variables) {
-        this(Nd4j.ones(variables.stream().mapToLong(Variable::getStateCount).toArray()).castTo(DataType.DOUBLE), variables);
+        this(HDArray.createBySizeWithValue(1.0d, variables.stream().mapToInt(Variable::getStateCount).toArray()),
+                variables);
     }
 
     /**
-     * Constructor.
-     * @param distribution Probability distribution
-     * @param variables Array of variables.
-     * @see #Message(INDArray, List)
-     */
-    public Message(final INDArray distribution, final Variable<?>... variables) {
-        this(distribution, Arrays.asList(variables));
-    }
-
-    /**
-     * Constructor.
-     * @param distribution Probability distribution.
+     * Constructor. Call {@link #Message(List)}.
      * @param variables List of variables.
-     * @see ProbabilityTable#ProbabilityTable(INDArray, List)
      */
-    public Message(final INDArray distribution, final List<Variable<?>> variables) {
-        super(distribution, variables);
+    public Message(final Variable<?>... variables) {
+        this(List.of(variables));
     }
 
     /**
-     * Deep copy constructor
-     * @param table Other Probability table.
-     * @see ProbabilityTable#ProbabilityTable(ProbabilityTable)
+     * Copy constructor.
+     * @param otherMessage Another message.
      */
-    public Message(final ProbabilityTable table) {
-        super(table);
+    public Message(final Message otherMessage) {
+        super(otherMessage);
     }
 
     /**
-     * Move axis of this {@code distribution} to new position.
-     *
-     * Suppose {@code message} have probability distribution with shape {@code [2, 3, 4]}.
-     * <pre>
-     *     message.moveaxis({0, 1, 2}, {0, 2, 1})
-     * </pre>
-     * Now the probability distribution should have shape {@code [2, 4, 3]}.<br/>
-     *
-     * This function is trying to mimic numpy function {@code np.moveaxis}. <br/>
-     *
-     * Also note that negative position is not allowed.
-     * @param originDims Original positions of the axes to move. These must be unique.
-     * @param targetDims Destination positions for each of the original axis. These mush also be unique.
-     * @return Message with modified probability distribution.
-     * @see DistributionUtil#moveaxis(INDArray, int[], int[])
+     * Constructor. Call {@link ProbabilityTable#ProbabilityTable(ProbabilityTable)} }.
+     * @param probabilityTable Probability table.
      */
-    public Message moveAxis(int[] originDims, int[] targetDims) {
-        INDArray newDistribution = DistributionUtil.moveaxis(this.getDistribution(), originDims, targetDims);
-        return new Message(newDistribution, this.getVariables());
+    public Message(final ProbabilityTable probabilityTable) {
+        super(probabilityTable);
     }
 
     /**
-     * Normalize the probability distribution. This is an in-place operation.
+     * Permute the original dimensions to the target dimensions.
+     * @param originalDimensions Original dimensions.
+     * @param toDimensionIndices Target dimensions idx for each original axis.
+     * @return A new message with permuted dimensions.
+     * @see HDArray#moveAxis(int[], int[])
+     * @throws NullPointerException If given original dimensions or target dimensions is null.
+     * @throws IllegalArgumentException If given original dimensions and target dimensions have different length,
+     * or given dimensions contain invalid index, or given dimensions contain duplicated index.
+     */
+    public Message moveAxis(final int[] originalDimensions, final int[] toDimensionIndices) {
+        Objects.requireNonNull(originalDimensions, Log.genLogMsg(this.getClass(),
+                "Given original dimensions should not be null"));
+        Objects.requireNonNull(toDimensionIndices, Log.genLogMsg(this.getClass(),
+                "Given target dimensions should not be null"));
+        // Given original dimensions and target dimensions should have same length
+        if (originalDimensions.length != toDimensionIndices.length) {
+            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(),
+                    "Given original dimensions and target dimensions should have same length, but given" +
+                            "original dimension is " + Arrays.toString(originalDimensions) + " and target dimension is "
+                            + Arrays.toString(toDimensionIndices)));
+        }
+        // Check invalid index
+        for (int i = 0; i < originalDimensions.length; i++) {
+            if (originalDimensions[i] < 0 || originalDimensions[i] >= variables.size()) {
+                throw new IllegalArgumentException(Log.genLogMsg(this.getClass(),
+                        "Given original dimensions contain invalid index: " +
+                                Arrays.toString(originalDimensions)));
+            }
+            if (toDimensionIndices[i] < 0 || toDimensionIndices[i] >= variables.size()) {
+                throw new IllegalArgumentException(Log.genLogMsg(this.getClass(),
+                        "Given target dimensions contain invalid index: " +
+                                Arrays.toString(toDimensionIndices)));
+            }
+        }
+        // Check duplicated index
+        if (originalDimensions.length != Arrays.stream(originalDimensions).distinct().count()) {
+            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(),
+                    "Given original dimensions contain duplicated index: " +
+                            Arrays.toString(originalDimensions)));
+        }
+        if (toDimensionIndices.length != Arrays.stream(toDimensionIndices).distinct().count()) {
+            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(),
+                    "Given target dimensions contain duplicated index: " +
+                            Arrays.toString(toDimensionIndices)));
+        }
+        // Move axis for probability array
+        final HDArray newProbability = this.probability.moveAxis(originalDimensions, toDimensionIndices);
+        // Move axis for variable list
+        List<Variable<?>> newVariables = new ArrayList<>(variables);
+        for (int i = 0; i < originalDimensions.length; i++) {
+            newVariables.set(toDimensionIndices[i], variables.get(originalDimensions[i]));
+        }
+        return new Message(newProbability, newVariables);
+    }
+
+    /**
+     * Normalize the probability distribution.
+     * @see HDArray#normalize()
      */
     public void normalize() {
-        this.distribution.divi(this.distribution.sumNumber());
+        this.probability.normalize();
     }
 
     /**
-     * Message multiplication that join two message together.
-     * @param message1 First message
-     * @param message2 Second message
-     * @return Message product.
-     * @throws NullPointerException if one of the {@link Message} is null
-     * @throws IllegalArgumentException if there are no common variables between two {@link  Message}
+     * Find indices of target variables in the variable list.
+     * @param variableList Variable list.
+     * @param targetVariables Target variables.
+     * @return Indices of target variables in the variable list.
+     * @throws NullPointerException If given variable list or target variables is null.
+     * @throws IllegalArgumentException If given target variables contain null element or
+     * given target variables is not the subset of the variable list.
      */
-    public static Message messageProduct(final Message message1, final Message message2) {
-        Objects.requireNonNull(message1, Log.genLogMsg("Message", "message1 cannot be null"));
-        Objects.requireNonNull(message2, Log.genLogMsg("Message", "message2 cannot be null"));
-
-        // There should be at least one common variables
-        if (message1.getVariables().stream().noneMatch(var -> message2.getVariables().contains(var))) {
-            throw new IllegalArgumentException(Log.genLogMsg("Message", "There are no common variable between two given factors"));
-        }
-
-        // Define new variables list with following order
-        // [Variables only in message1], [Common Variables], [Variables only in message2]
-        List<Variable<?>> uniqueVariables1 = message1.getVariables().stream().filter(var -> !message2.getVariables().contains(var)).toList();
-        List<Variable<?>> commonVariables = message1.getVariables().stream().filter(var -> message2.getVariables().contains(var)).toList();
-        List<Variable<?>> uniqueVariables2 = message2.getVariables().stream().filter(var -> !message1.getVariables().contains(var)).toList();
-
-        List<Variable<?>> newVariables = new ArrayList<>();
-        newVariables.addAll(uniqueVariables1);
-        newVariables.addAll(commonVariables);
-        newVariables.addAll(uniqueVariables2);
-
-        // Adjust dimensions
-        final int[] originDims1 = IntStream.range(0, message1.getVariables().size()).toArray();
-        final int[] targetDims1 = Message.findIndices(newVariables.stream().filter(message1.getVariables()::contains).toList(), message1.getVariables());
-        INDArray distribution1 = DistributionUtil.moveaxis(message1.getDistribution(), originDims1, targetDims1);
-        distribution1 = DistributionUtil.appendDimensions(distribution1, newVariables.size() - message1.getVariables().size(), false);
-
-        final int[] originDims2 = IntStream.range(0, message2.getVariables().size()).toArray();
-        final int[] targetDims2 = Message.findIndices(newVariables.stream().filter(message2.getVariables()::contains).toList(), message2.getVariables());
-        INDArray distribution2 = DistributionUtil.moveaxis(message2.getDistribution(), originDims2, targetDims2);
-        distribution2 = DistributionUtil.appendDimensions(distribution2, newVariables.size() - message2.getVariables().size(), true);
-
-        // Calculate new distribution
-        final INDArray newDistribution = distribution1.mul(distribution2);
-
-        return new Message(newDistribution, newVariables);
+    protected static int[] findIndices(final List<Variable<?>> variableList, final List<Variable<?>> targetVariables) {
+        Objects.requireNonNull(variableList, Log.genLogMsg(Message.class, "Given variable list should not be null"));
+        Objects.requireNonNull(targetVariables, Log.genLogMsg(Message.class, "Given target variables should not be null"));
+        return targetVariables.stream().mapToInt(variableList::indexOf).toArray();
     }
 
     /**
-     * Find the position index of {@code targetVariables} in {@code variables}.
-     * @param variables Reference variable list.
-     * @param targetVariables List of target variables.
-     * @return Array of integer representing the corresponding position index.
-     * @throws NullPointerException if any to parameter is null.
-     */
-    protected static int[] findIndices(final List<Variable<?>> variables, final List<Variable<?>> targetVariables) {
-        return targetVariables.stream().mapToInt(variables::indexOf).toArray();
-    }
-
-    /**
-     * Probability marginalization.
-     * @param message Reference message
-     * @param targetVariables Variable to be marginalized, which will be removed from the variable list.
-     * @return Marginalized message.
-     * @see #messageMarginalization(Message, List)
+     * Marginalize the message to the target variables.
+     * Call {@link #messageMarginalization(Message, List)}.
+     * @param message Message.
+     * @param targetVariables Target variables.
+     * @return A new message marginalized to the target variables.
      */
     public static Message messageMarginalization(final Message message, final Variable<?>... targetVariables) {
-        return Message.messageMarginalization(message, Arrays.asList(targetVariables));
+        return messageMarginalization(message, List.of(targetVariables));
     }
 
     /**
-     * Probability marginalization.
-     * @param message Reference message
-     * @param targetVariables Variable to be marginalized, which will be removed from the variable list.
-     * @return Marginalized message.
-     * @throws NullPointerException if any of the arguments is null.
-     * @throws IllegalArgumentException if any of the condition happen:
-     * <ol>
-     *     <li>{@code targetVariables} is empty</li>
-     *     <li>{@code targetVariables} contain null element</li>
-     *     <li>{@code targetVariables} is not the subset of the variables in {@code message}</li>
-     * </ol>
+     * Marginalize the message to the target variables.
+     * @param message Message.
+     * @param targetVariables Target variables.
+     * @return A new message marginalized to the target variables.
+     * @throws NullPointerException If given message or target variables is null.
+     * @throws IllegalArgumentException If given target variables contain null element or
+     * given target variables is not the subset of the message variables.
      */
     public static Message messageMarginalization(final Message message, final List<Variable<?>> targetVariables) {
-        Objects.requireNonNull(message, Log.genLogMsg("Message", "Given message cannot be null"));
-        Objects.requireNonNull(targetVariables, Log.genLogMsg("Message", "Given targetVariables cannot be null"));
+        Objects.requireNonNull(message, Log.genLogMsg(Message.class,
+                "Given message should not be null"));
+        Objects.requireNonNull(targetVariables, Log.genLogMsg(Message.class,
+                "Given target variables should not be null"));
 
-        // targetVariables cannot be empty
         if (targetVariables.isEmpty()) {
-            throw new IllegalArgumentException(Log.genLogMsg("Message", "Given targetVariables cannot be empty"));
+            return (Message) message.clone();
         }
 
         // targetVariables cannot contain null element
         if (targetVariables.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException(Log.genLogMsg("Message", "Given targetVariables cannot contain null element"));
+            throw new IllegalArgumentException(Log.genLogMsg(Message.class,
+                    "Given target variables contain null element"));
         }
 
-        // targetVariables should be the subset of message variables
-        if (!new HashSet<>(message.getVariables()).containsAll(targetVariables)) {
-            throw new IllegalArgumentException(Log.genLogMsg("Message", "Given targetVariables should be the subset of message variables"));
+        // targetVariables should be the subset of the message variables
+        if (!new HashSet<>(message.variables).containsAll(targetVariables)) {
+            throw new IllegalArgumentException(Log.genLogMsg(Message.class,
+                    "Given target variables should be the subset of the message variables"));
         }
 
-        int[] sumDimensions = Message.findIndices(message.getVariables(), targetVariables);
-        INDArray newDistribution = message.getDistribution().sum(sumDimensions);
-        List<Variable<?>> newVariables = message.getVariables().stream().filter(var -> !targetVariables.contains(var)).toList();
-        return new Message(newDistribution, newVariables);
+        int[] sumDimensions = Message.findIndices(message.variables, targetVariables);
+        HDArray newProbability = message.probability.sumAlongAxis(sumDimensions);
+        List<Variable<?>> newVariables =
+                message.getVariables().stream().filter(var -> !targetVariables.contains(var)).toList();
+        return new Message(newProbability, newVariables);
     }
 
     /**
-     * Join all message together (keep doing {@link #messageProduct(Message, Message)}.
-     * @param messages Array of message.
-     * @return Joined message.
-     * @see #messageMarginalization(Message, List)
+     * Product of two messages.
+     * @param message1 Message 1.
+     * @param message2 Message 2.
+     * @return A new message which is the product of message 1 and message 2.
+     * @throws NullPointerException If given message 1 or message 2 is null.
+     * @throws IllegalArgumentException If given message 1 and message 2 have at least one same variables.
+     * @see #messageProduct(List), #messageProduct(Message...)
      */
-    public static Message joinMessages(final Message... messages) {
-        return Message.joinMessages(Arrays.asList(messages));
+    public static Message messageProduct(final Message message1, final Message message2) {
+        Objects.requireNonNull(message1, Log.genLogMsg(Message.class,
+                "Given message 1 should not be null"));
+        Objects.requireNonNull(message2, Log.genLogMsg(Message.class,
+                "Given message 2 should not be null"));
+
+        // Check if message 1 and message 2 have at least one same variables
+        if (Collections.disjoint(message1.variables, message2.variables)) {
+            throw new IllegalArgumentException(Log.genLogMsg(Message.class,
+                    "Given message 1 and message 2 should have at least one same variables"));
+        }
+
+        // Define new variable list with following order
+        // [Variables only in message 1], [Common Variables], [Variables only in message2]
+        List<Variable<?>> uniqueVariables1 =
+                message1.variables.stream().filter(var -> !message2.variables.contains(var)).toList();
+        List<Variable<?>> commonVariables = message1.variables.stream().filter(message2.variables::contains).toList();
+        List<Variable<?>> uniqueVariables = message2.variables.stream().filter(var -> !message1.variables.contains(var)).toList();
+        List<Variable<?>> newVariables = new ArrayList<>();
+        newVariables.addAll(uniqueVariables1);
+        newVariables.addAll(commonVariables);
+        newVariables.addAll(uniqueVariables);
+
+        // Adjust dimensions
+        final int[] originDims1 = IntStream.range(0, message1.variables.size()).toArray();
+        final int[] targetDims1 =
+                Message.findIndices(newVariables.stream().filter(message1.variables::contains).toList(),
+                        message1.variables);
+        HDArray probability1 = message1.probability.moveAxis(originDims1, targetDims1);
+        probability1 = probability1.appendDimension(newVariables.size(), false);
+
+        final int[] originDims2 = IntStream.range(0, message2.variables.size()).toArray();
+        final int[] targetDims2 =
+                Message.findIndices(newVariables.stream().filter(message2.variables::contains).toList(),
+                        message2.variables);
+        HDArray probability2 = message2.probability.moveAxis(originDims2, targetDims2);
+        probability2 = probability2.appendDimension(newVariables.size(), true);
+
+        HDArray newProbability = probability1.mul(probability2);
+        return new Message(newProbability, newVariables);
     }
 
     /**
-     * Join all message together {keep doing {@link #messageProduct(Message, Message)}}.
-     * @param messages List of message.
-     * @return Joined message
-     * @throws NullPointerException if given list of message is null.
-     * @throws IllegalArgumentException if following condition happen:
-     * <ol>
-     *     <li>{@code messages} is empty.</li>
-     *     <li>{@code messages} contain null element</li>
-     * </ol>
+     * Product of messages.
+     * Call {@link #messageProduct(List)}.
+     * @param messages Messages.
+     * @return A new message which is the product of messages.
+     * @see #messageProduct(List), #messageProduct(Message, Message)
      */
-    public static Message joinMessages(final Collection<Message> messages) {
-        Objects.requireNonNull(messages, Log.genLogMsg("Message", "Given messages cannot be null"));
+    public static Message messageProduct(final Message... messages) {
+        return Message.messageProduct(List.of(messages));
+    }
 
-        // Given messages cannot contain null element
-        if (messages.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException(Log.genLogMsg("Message", "Given messages list cannot contain"));
-        }
+    /**
+     * Product of messages.
+     * Call {@link #messageProduct(Message, Message)}.
+     * @param messages Messages.
+     * @return A new message which is the product of messages.
+     * @throws NullPointerException If given messages is null.
+     * @throws IllegalArgumentException If given messages is empty or given messages contain null element.
+     * @see #messageProduct(Message, Message), #messageProduct(Message...)
+     */
+    public static Message messageProduct(final List<Message> messages) {
+        Objects.requireNonNull(messages, Log.genLogMsg(Message.class,
+                "Given messages should not be null"));
 
         // Given messages cannot be empty
         if (messages.isEmpty()) {
-            throw new IllegalArgumentException(Log.genLogMsg("Message", "Give messages list cannot be empty"));
+            throw new IllegalArgumentException(Log.genLogMsg(Message.class,
+                    "Given messages list is empty"));
         }
 
-        Message message = messages.stream().reduce(Message::messageProduct).orElse(null);
-        if (message == null) {
-            throw new RuntimeException(Log.genLogMsg("Message", "Joint result is null"));
+        // Given messages cannot contain null element
+        if (messages.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException(Log.genLogMsg(Message.class,
+                    "Given messages list contain null element"));
         }
-        return message;
+
+        if (messages.size() == 1) {
+            return messages.get(0);
+        }
+
+        return messages.stream().reduce(Message::messageProduct).get();
     }
 
     @Override
     public int hashCode() {
-        int result = this.distribution.hashCode();
-        for (Variable<?> variable : this.variables) {
-            result = 7 * result + variable.hashCode();
-        }
-        return result;
+        return super.hashCode();
     }
 
     @Override
@@ -254,6 +299,11 @@ public class Message extends ProbabilityTable {
 
     @Override
     public String toString() {
-        return "Message: " + this.variables;
+        return "Message: " + variables;
+    }
+
+    @Override
+    public Object clone() {
+        return new Message((ProbabilityTable) super.clone());
     }
 }

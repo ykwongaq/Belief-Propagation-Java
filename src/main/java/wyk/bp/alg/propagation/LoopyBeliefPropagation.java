@@ -1,7 +1,6 @@
 package wyk.bp.alg.propagation;
 
 import org.jgrapht.alg.util.Pair;
-import org.nd4j.shade.errorprone.annotations.Var;
 import wyk.bp.graph.*;
 import wyk.bp.utils.Log;
 
@@ -72,7 +71,7 @@ public class LoopyBeliefPropagation<E> extends BaseBeliefPropagationAlgorithm<E>
             Message message = this.getFactorToVariableMessage(neighborFactor, variable);
             incomingMessages.add(message);
         }
-        Message jointedMessage = Message.joinMessages(incomingMessages);
+        Message jointedMessage = Message.messageProduct(incomingMessages);
         jointedMessage.normalize();
         return jointedMessage;
     }
@@ -119,8 +118,8 @@ public class LoopyBeliefPropagation<E> extends BaseBeliefPropagationAlgorithm<E>
                 final FactorGraphNode source = this.graph.getEdgeSource(edge);
                 final FactorGraphNode target = this.graph.getEdgeTarget(edge);
 
-                Variable<?> variable = null;
-                Factor factor = null;
+                Variable<?> variable;
+                Factor factor;
                 if (source instanceof Factor && target instanceof Variable<?>) {
                     factor = (Factor) source;
                     variable = (Variable<?>) target;

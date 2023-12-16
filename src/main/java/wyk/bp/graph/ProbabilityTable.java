@@ -1,6 +1,5 @@
 package wyk.bp.graph;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
 import wyk.bp.utils.Log;
 
 import java.util.ArrayList;
@@ -9,149 +8,129 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * ProbabilityTable represents a probability distribution, which is a multidimensional {@link INDArray}. Each axis corresponds
- * to a particular {@link Variable}.<br/>
- *
- * The number of dimension always match with the number of variables. <br/>
- *
- * Example of Probability Table:
- * <table border="1">
- *     <caption>caption</caption>
- *     <tr>
- *         <td></td>
- *         <td>b<sub>1</sub></td>
- *         <td>b<sub>2</sub></td>
- *     </tr>
- *     <tr>
- *         <td>a<sub>1</sub></td>
- *         <td>0.2</td>
- *         <td>0.2</td>
- *     </tr>
- *     <tr>
- *         <td>a<sub>2</sub></td>
- *         <td>0.3</td>
- *         <td>0.3</td>
- *     </tr>
- * </table>
- *
- * The above table show two variable a and b, where both of them have two states. Every entry show the probability
- * for each state to appear. For example, the probability for (a<sub>1</sub>, b<sub>1</sub>) is 0.2.
- *
- * @author WYK
+ * Probability table.
+ * <p>
+ *     A probability table is a probability distribution over a set of variables.
+ *     It is a multidimensional array, where each dimension corresponds to a variable.
+ *     The size of each dimension is the number of states of the corresponding variable.
+ * </p>
  */
-public abstract class ProbabilityTable {
-
+public class ProbabilityTable implements Cloneable {
     /**
-     * Probability distribution of the corresponding variables.
+     * Probability distributions array.
      */
-    protected final INDArray distribution;
+    protected final HDArray probability;
     /**
      * List of variables considered in the distribution.
      */
     protected final List<Variable<?>> variables;
 
-
     /**
-     * Constructor. Call {@link #ProbabilityTable(INDArray, List)}.
-     * @param distribution Probability distributions array.
+     * Constructor. Call {@link #ProbabilityTable(HDArray, List)}.
+     * @param probability Probability distributions array.
      * @param variables Array of variables.
-     * @see #ProbabilityTable(INDArray, List)
      */
-    public ProbabilityTable(final INDArray distribution, final Variable<?>... variables) {
-        this(distribution, Arrays.asList(variables));
+    public ProbabilityTable(final HDArray probability, final Variable<?>... variables) {
+        this(probability, Arrays.asList(variables));
     }
 
     /**
-     * Deep Copy Constructor
-     * @param table Other probability table
+     * Copy constructor.
+     * @param otherTable Another probability table.
      */
-    public ProbabilityTable(final ProbabilityTable table) {
-        this(table.distribution, table.variables);
+    public ProbabilityTable(final ProbabilityTable otherTable) {
+        this(otherTable.probability, otherTable.variables);
     }
 
     /**
      * Constructor.
-     * @param distribution Probability Distribution array.
+     * @param probability Probability distributions array.
      * @param variables List of variables.
-     * @throws NullPointerException if given {@code distribution} or {@code variables} is null.
-     * @throws IllegalArgumentException if the following condition happen:
-     * <ol>
-     *     <li>Variable list is empty</li>
-     *     <li>Variable list contain null element</li>
-     *     <li>Number of variables and number of dimension of distribution mismatch</li>
-     *     <li>Variable state and corresponding distribution dimension mismatch</li>
-     * </ol>
      */
-    public ProbabilityTable(final INDArray distribution, final List<Variable<?>> variables) {
-        Objects.requireNonNull(variables, Log.genLogMsg(this.getClass(), "Given variables list cannot be null"));
-        Objects.requireNonNull(distribution, Log.genLogMsg(this.getClass(), "Given distribution cannot be null"));
+    public ProbabilityTable(final HDArray probability, final List<Variable<?>> variables) {
+        Objects.requireNonNull(probability, Log.genLogMsg(
+                this.getClass(), "Given probability should not be null")
+        );
+        Objects.requireNonNull(variables, Log.genLogMsg(this.getClass(), "Given variables should not be null"));
 
-        // Given list cannot be empty
+        // Given variables cannot be empty
         if (variables.isEmpty()) {
             throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Given variables list is empty"));
         }
 
-        // Given list cannot contains null element
+        // Given variables cannot contains null element
         if (variables.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Give variables list contain null element"));
+            throw new IllegalArgumentException(
+                    Log.genLogMsg(this.getClass(), "Give variables list contain null element")
+            );
         }
 
-        if (variables.size() != distribution.rank()) {
-            throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Given variables list size does not match with number of dimension of distribution: Number of variables: " + variables.size() + " Number of dimension: " + distribution.rank()));
+        // Number of variables and number of dimension of distribution mismatch
+        if (variables.size() != probability.rank()) {
+            throw new IllegalArgumentException(
+                    Log.genLogMsg(this.getClass(),
+                            "Number of variables and number of dimension of distribution mismatch")
+            );
         }
 
-        long[] dimensions = distribution.shape();
-        for (int idx=0; idx <variables.size(); idx++) {
-            if (dimensions[idx] != variables.get(idx).getStateCount()) {
-                throw new IllegalArgumentException(Log.genLogMsg(this.getClass(), "Mismatch between dimension and variable state count. Dimension: " + dimensions[idx] + ", Variable state count: " + variables.get(idx).getStateCount()));
+        // Variable state and corresponding distribution dimension mismatch
+        for (int i = 0; i < variables.size(); i++) {
+            if (variables.get(i).getStateCount() != probability.shape[i]) {
+                throw new IllegalArgumentException(
+                        Log.genLogMsg(this.getClass(),
+                                "Variable state and corresponding distribution dimension mismatch")
+                );
             }
         }
-        this.variables = new ArrayList<>();
-        this.variables.addAll(variables);
-        this.distribution = distribution.dup();
+
+        // Deep copy
+        this.probability = probability.clone();
+        this.variables = new ArrayList<>(variables);
+    }
+
+    /**
+     * Get probability distribution.
+     * @return Probability distribution.
+     */
+    public HDArray getProbability() {
+        return this.probability;
     }
 
     /**
      * Get variable list.
-     * @return Variable list
+     * @return Variable list.
      */
     public List<Variable<?>> getVariables() {
         return this.variables;
     }
 
     /**
-     * Get distribution
-     * @return Distribution
+     * Check whether this probability table and another probability table have the same variables.
+     * @param otherTable Another probability table.
+     * @return True if they have the same variables, false otherwise.
      */
-    public INDArray getDistribution() {
-        return this.distribution;
+    public boolean haveSameVariables(ProbabilityTable otherTable) {
+        Objects.requireNonNull(otherTable, Log.genLogMsg(this.getClass(),
+                "Given probability table should not be null"));
+        return this.variables.equals(otherTable.variables);
     }
 
     /**
-     * Check is other {@link ProbabilityTable} contain the same variables.
-     * @param otherTable Other {@link ProbabilityTable}.
-     * @return {@code True} if they contain the same variables. Otherwise, {@code False}.
-     * @throws NullPointerException if given {@code otherTable} is null.
+     * Check whether this probability table contains the given variable.
+     * @param variable Given variable.
+     * @return True if this probability table contains the given variable, false otherwise.
      */
-    public boolean haveSameVariable(final Factor otherTable) {
-        Objects.requireNonNull(otherTable, Log.genLogMsg(this.getClass(), "Given other table should not be null"));
-        return this.variables.equals(otherTable.getVariables());
-    }
-
-    /**
-     * Check is this {@link ProbabilityTable} contain given {@code variable} or not.
-     * @param variable Target variable
-     * @return {@code True} if contain. Otherwise {@code False}.
-     */
-    public boolean contains(final Variable<?> variable) {
+    public boolean containsVariable(Variable<?> variable) {
+        Objects.requireNonNull(variable, Log.genLogMsg(this.getClass(),
+                "Given variable should not be null"));
         return this.variables.contains(variable);
     }
 
     @Override
     public int hashCode() {
-        int result = this.distribution.hashCode();
+        int result = this.probability.hashCode();
         for (Variable<?> variable : this.variables) {
-            result = 31 * result + variable.hashCode();
+            result = 17 * result + variable.hashCode();
         }
         return result;
     }
@@ -160,7 +139,20 @@ public abstract class ProbabilityTable {
     public boolean equals(Object otherObj) {
         if (this == otherObj) return true;
         if (otherObj == null || this.getClass() != otherObj.getClass()) return false;
-        ProbabilityTable otherFactor = (ProbabilityTable) otherObj;
-        return this.distribution.equals(otherFactor.distribution) && this.variables.equals(otherFactor.variables);
+        ProbabilityTable otherTable = (ProbabilityTable) otherObj;
+        return this.probability.equals(otherTable.probability) && this.variables.equals(otherTable.variables);
+    }
+
+    @Override
+    public String toString() {
+        return "ProbabilityTable{" +
+                "probability=" + probability +
+                ", variables=" + variables +
+                '}';
+    }
+
+    @Override
+    public Object clone() {
+        return new ProbabilityTable(this);
     }
 }

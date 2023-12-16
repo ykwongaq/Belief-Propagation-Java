@@ -2,22 +2,19 @@ package wyk.bp.graph;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class MessageTest {
-    protected static INDArray distribution1;
+    protected static HDArray distribution1;
     protected static List<Variable<?>> variables1;
-    protected static INDArray distribution2;
+    protected static HDArray distribution2;
     protected static List<Variable<?>> variables2;
 
-    protected static INDArray distribution3;
+    protected static HDArray distribution3;
 
     @BeforeAll
     static void initTestCase() {
@@ -27,11 +24,11 @@ class MessageTest {
         MessageTest.variables2 = MessageTest.initVariables2();
         MessageTest.distribution3 = MessageTest.initDistribution3();
     }
-    static INDArray initDistribution1() {
+    static HDArray initDistribution1() {
         double[][][] values = {
                 {{0.2, 0.5}, {0.6, 0.5}}, {{1.0, 0.6}, {0.2, 0.3}}
         };
-        return Nd4j.create(values);
+        return HDArray.create(values);
     }
     static List<Variable<?>> initVariables1() {
         List<Variable<?>> variables1 = new ArrayList<>();
@@ -44,11 +41,11 @@ class MessageTest {
         return variables1;
     }
 
-    static INDArray initDistribution2() {
+    static HDArray initDistribution2() {
         double[][] values = {
                 {0.5, 0.7}, {0.1, 0.2}
         };
-        return Nd4j.create(values);
+        return HDArray.create(values);
     }
 
     static List<Variable<?>> initVariables2() {
@@ -60,11 +57,11 @@ class MessageTest {
         return variables1;
     }
 
-    static INDArray initDistribution3() {
+    static HDArray initDistribution3() {
         double[][][] values = {
                 {{0.2, 0.5}, {0.6, 0.4}}, {{1.0, 0.6}, {0.2, 0.3}}
         };
-        return Nd4j.create(values);
+        return HDArray.create(values);
     }
 
     @Test
@@ -75,7 +72,7 @@ class MessageTest {
         double[][] values = {
                 {1.0d, 1.0d}, {1.0d, 1.0d}
         };
-        Message expectedMessage = new Message(Nd4j.create(values), a, b);
+        Message expectedMessage = new Message(HDArray.create(values), a, b);
         assertEquals(expectedMessage, message);
     }
     @Test
@@ -116,7 +113,7 @@ class MessageTest {
                 {0.5, 0.7, 0.1}, {0.1, 0.2, 0.3}
         };
 
-        assertThrows(IllegalArgumentException.class, () -> new Message(Nd4j.create(values), var1, var2));
+        assertThrows(IllegalArgumentException.class, () -> new Message(HDArray.create(values), var1, var2));
     }
 
     @Test
@@ -124,13 +121,13 @@ class MessageTest {
         double[][][] values = {
                 {{0.2, 1.0}, {0.5, 0.6}}, {{0.6, 0.2}, {0.5, 0.3}}
         };
-        INDArray expected = Nd4j.create(values);
+        HDArray expected = HDArray.create(values);
 
         int[] originDims = {0, 1, 2};
         int[] targetDims = {2, 0, 1};
         Message message = new Message(MessageTest.distribution1, MessageTest.variables1);
         message = message.moveAxis(originDims, targetDims);
-        assertEquals(expected, message.getDistribution());
+        assertEquals(expected, message.getProbability());
     }
 
     @Test
@@ -151,24 +148,24 @@ class MessageTest {
 
     @Test
     void testEquals() {
-        Factor factor1 = new Factor(MessageTest.distribution1, MessageTest.variables1);
-        Factor factor2 = new Factor(MessageTest.distribution2, MessageTest.variables2);
-        Factor factor3 = new Factor(MessageTest.distribution3, MessageTest.variables1);
-        Factor factor4 = new Factor(MessageTest.distribution1, MessageTest.variables1);
+        Message message1 = new Message(MessageTest.distribution1, MessageTest.variables1);
+        Message message2 = new Message(MessageTest.distribution2, MessageTest.variables2);
+        Message message3 = new Message(MessageTest.distribution3, MessageTest.variables1);
+        Message message4 = new Message(MessageTest.distribution1, MessageTest.variables1);
 
-        assertEquals(factor1, factor4);
-        assertNotEquals(factor1, factor2);
-        assertNotEquals(factor1, factor3);
+        assertEquals(message1, message4);
+        assertNotEquals(message1, message2);
+        assertNotEquals(message1, message3);
     }
 
     @Test
     void testSameVariables() {
-        Factor factor1 = new Factor(MessageTest.distribution1, MessageTest.variables1);
-        Factor factor2 = new Factor(MessageTest.distribution2, MessageTest.variables2);
-        Factor factor3 = new Factor(MessageTest.distribution3, MessageTest.variables1);
+        Message message1 = new Message(MessageTest.distribution1, MessageTest.variables1);
+        Message message2 = new Message(MessageTest.distribution2, MessageTest.variables2);
+        Message message3 = new Message(MessageTest.distribution3, MessageTest.variables1);
 
-        assertTrue(factor1.haveSameVariable(factor3));
-        assertFalse(factor1.haveSameVariable(factor2));
+        assertTrue(message1.haveSameVariables(message3));
+        assertFalse(message1.haveSameVariables(message2));
     }
 
     @Test
@@ -179,12 +176,12 @@ class MessageTest {
         double[][] values = {
                 {0.5, 0.8}, {0.1, 0.0}
         };
-        Message message = new Message(Nd4j.create(values), a, b);
+        Message message = new Message(HDArray.create(values), a, b);
         message.normalize();
         double[][] expectedValues = {
                 {0.5 / 1.4, 0.8 / 1.4}, {0.1 / 1.4, 0.0}
         };
-        Message expected = new Message(Nd4j.create(expectedValues), a, b);
+        Message expected = new Message(HDArray.create(expectedValues), a, b);
 
         assertEquals(expected, message);
     }
@@ -196,13 +193,13 @@ class MessageTest {
         };
         Variable<String> var1 = new Variable<>("a", 3);
         Variable<String> var2 = new Variable<>("b", 2);
-        Message message1 = new Message(Nd4j.create(values1), var1, var2);
+        Message message1 = new Message(HDArray.create(values1), var1, var2);
 
         double[][] values2 = {
                 {0.5, 0.7}, {0.1, 0.2}
         };
         Variable<String> var3 = new Variable<>("c", 2);
-        Message message2 = new Message(Nd4j.create(values2), var2, var3);
+        Message message2 = new Message(HDArray.create(values2), var2, var3);
 
 
         double[][][] expectedValues = {
@@ -210,7 +207,7 @@ class MessageTest {
                 {{0.05, 0.07}, {0.0, 0.0}},
                 {{0.15, 0.21}, {0.09, 0.18}}
         };
-        Message expectedMessage = new Message(Nd4j.create(expectedValues), var1, var2, var3);
+        Message expectedMessage = new Message(HDArray.create(expectedValues), var1, var2, var3);
         Message messageProduct = Message.messageProduct(message1, message2);
         assertEquals(expectedMessage, messageProduct);
     }
@@ -222,19 +219,19 @@ class MessageTest {
         };
         Variable<String> var1 = new Variable<>("a", 2);
         Variable<String> var2 = new Variable<>("b", 2);
-        Message message1 = new Message(Nd4j.create(values1), var2, var1);
+        Message message1 = new Message(HDArray.create(values1), var2, var1);
 
         double[][] values2 = {
                 {0.5, 0.7}, {0.1, 0.2}
         };
         Variable<String> var3 = new Variable<>("c", 2);
-        Message message2 = new Message(Nd4j.create(values2), var2, var3);
+        Message message2 = new Message(HDArray.create(values2), var2, var3);
 
         double[][][] expectedValues = {
                 {{0.25, 0.35}, {0.01, 0.02}},
                 {{0.4, 0.56}, {0.0, 0.0}}
         };
-        Message expectedMessage = new Message(Nd4j.create(expectedValues), var1, var2, var3);
+        Message expectedMessage = new Message(HDArray.create(expectedValues), var1, var2, var3);
         Message messageProduct = Message.messageProduct(message1, message2);
         assertEquals(expectedMessage, messageProduct);
     }
@@ -250,14 +247,14 @@ class MessageTest {
                 0.5, 0.7
         };
 
-        Message message1 = new Message(Nd4j.create(values1), var1, var2);
-        Message message2 = new Message(Nd4j.create(values2), var1);
+        Message message1 = new Message(HDArray.create(values1), var1, var2);
+        Message message2 = new Message(HDArray.create(values2), var1);
         Message result = Message.messageProduct(message1, message2);
 
         double[][] values3 = {
                 {0.25, 0.07}, {0.4, 0.0}
         };
-        Message expectedMessage = new Message(Nd4j.create(values3), var2, var1);
+        Message expectedMessage = new Message(HDArray.create(values3), var2, var1);
 
         assertEquals(expectedMessage, result);
     }
@@ -296,12 +293,12 @@ class MessageTest {
         Variable<String> var1 = new Variable<>("a", 3);
         Variable<String> var2 = new Variable<>("b", 2);
         Variable<String> var3 = new Variable<>("c", 2);
-        Message message = new Message(Nd4j.create(values), var1, var2, var3);
+        Message message = new Message(HDArray.create(values), var1, var2, var3);
 
         double[][] expectedValues = {
                 {0.33, 0.51}, {0.05, 0.07}, {0.24, 0.39}
         };
-        Message expectedMessage = new Message(Nd4j.create(expectedValues), var1, var3);
+        Message expectedMessage = new Message(HDArray.create(expectedValues), var1, var3);
 
         Message marginalizedMessage = Message.messageMarginalization(message, var2);
         assertEquals(expectedMessage, marginalizedMessage);
@@ -317,12 +314,12 @@ class MessageTest {
         Variable<String> var1 = new Variable<>("a", 3);
         Variable<String> var2 = new Variable<>("b", 2);
         Variable<String> var3 = new Variable<>("c", 2);
-        Message message = new Message(Nd4j.create(values), var1, var2, var3);
+        Message message = new Message(HDArray.create(values), var1, var2, var3);
 
         double[] expectedValues = {
                 0.84, 0.12, 0.63
         };
-        Message expectedMessage = new Message(Nd4j.create(expectedValues), var1);
+        Message expectedMessage = new Message(HDArray.create(expectedValues), var1);
 
         Message marginalizedMessage = Message.messageMarginalization(message, var2, var3);
         assertEquals(expectedMessage, marginalizedMessage);
@@ -340,7 +337,7 @@ class MessageTest {
     @Test
     void testMarginalizationWithEmptyVariables() {
         Message message = new Message(MessageTest.distribution1, MessageTest.variables1);
-        assertThrows(IllegalArgumentException.class, () -> Message.messageMarginalization(message, new ArrayList<>()));
+        assertEquals(message, Message.messageMarginalization(message, new ArrayList<>()));
     }
 
     @Test
@@ -364,7 +361,7 @@ class MessageTest {
             Variable<String> var1 = new Variable<>("a", 2);
             Variable<String> var2 = new Variable<>("b", 2);
             Variable<String> var3 = new Variable<>("c", 2);
-            Message message = new Message(Nd4j.create(values1), var2, var1);
+            Message message = new Message(HDArray.create(values1), var2, var1);
             Message.messageMarginalization(message, var3);
         });
     }
@@ -378,17 +375,17 @@ class MessageTest {
         double[][] values1 = {
                 {0.5, 0.8}, {0.1, 0.0},
         };
-        Message message1 = new Message(Nd4j.create(values1), a, b);
+        Message message1 = new Message(HDArray.create(values1), a, b);
 
         double[][] values2 = {
                 {0.5, 0.7}, {0.1, 0.2},
         };
-        Message message2 = new Message(Nd4j.create(values2), b, c);
+        Message message2 = new Message(HDArray.create(values2), b, c);
 
         double[][] values3 = {
                 {0.3, 0.2}, {0.3, 0.6},
         };
-        Message message3 = new Message(Nd4j.create(values3), c, d);
+        Message message3 = new Message(HDArray.create(values3), c, d);
 
         double[][][][] values4 = {{{{0.075, 0.05 },
                 {0.105, 0.21 }},
@@ -398,20 +395,20 @@ class MessageTest {
                         {0.021, 0.042}},
                         {{0.0,    0.   },
                                 {0.,    0.   }}}};
-        Message expectedMessage = new Message(Nd4j.create(values4), a, b, c, d);
+        Message expectedMessage = new Message(HDArray.create(values4), a, b, c, d);
 
-        Message joinedMessage = Message.joinMessages(message1, message2, message3);
+        Message joinedMessage = Message.messageProduct(message1, message2, message3);
         assertEquals(expectedMessage, joinedMessage);
     }
 
     @Test
     void testJoinMessagesWithNullArgument() {
-        assertThrows(NullPointerException.class, () -> Message.joinMessages((Collection<Message>) null));
+        assertThrows(NullPointerException.class, () -> Message.messageProduct((Message) null));
     }
 
     @Test
     void testJoinMessagesWithEmptyList() {
-        assertThrows(IllegalArgumentException.class, () -> Message.joinMessages(new ArrayList<>()));
+        assertThrows(IllegalArgumentException.class, () -> Message.messageProduct(new ArrayList<>()));
     }
 
     @Test
@@ -424,24 +421,23 @@ class MessageTest {
         double[][] values1 = {
                 {0.5, 0.8}, {0.1, 0.0},
         };
-        Message message1 = new Message(Nd4j.create(values1), a, b);
+        Message message1 = new Message(HDArray.create(values1), a, b);
 
         double[][] values2 = {
                 {0.5, 0.7}, {0.1, 0.2},
         };
-        Message message2 = new Message(Nd4j.create(values2), b, c);
+        Message message2 = new Message(HDArray.create(values2), b, c);
 
         double[][] values3 = {
                 {0.3, 0.2}, {0.3, 0.6},
         };
-        Message message3 = new Message(Nd4j.create(values3), c, d);
+        Message message3 = new Message(HDArray.create(values3), c, d);
 
         List<Message> factors = new ArrayList<>();
         factors.add(message1);
         factors.add(null);
         factors.add(message2);
         factors.add(message3);
-        assertThrows(IllegalArgumentException.class, () -> Message.joinMessages(factors));
+        assertThrows(IllegalArgumentException.class, () -> Message.messageProduct(factors));
     }
-
 }
